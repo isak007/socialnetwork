@@ -1,10 +1,8 @@
 package com.ftn.socialnetwork.model.dto;
 
 import lombok.Data;
-import lombok.Getter;
 
 @Data
-@Getter
 public class UserDTO {
 
     private Long id;
