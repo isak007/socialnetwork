@@ -1,6 +1,7 @@
 package com.ftn.socialnetwork.service;
 
 import com.ftn.socialnetwork.model.FriendRequest;
+import com.ftn.socialnetwork.model.dto.FriendRequestDTO;
 
 import java.util.List;
 
@@ -8,11 +9,11 @@ public interface IFriendRequestService {
 
     FriendRequest findOne(Long id);
 
-    List<FriendRequest> findAll();
+    List<FriendRequest> findAllForUser(String token);
 
-    FriendRequest save(FriendRequest friendRequest);
+    FriendRequest save(String token, FriendRequestDTO friendRequestDTO);
 
-    FriendRequest update(FriendRequest friendRequest);
+    FriendRequest update(String token, FriendRequestDTO friendRequestDTO);
 
-    void delete(Long id);
+    void delete(String token, Long id);
 }

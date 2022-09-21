@@ -24,6 +24,9 @@ public class Comment {
     @Column(nullable = false)
     private String text;
 
+    @Column(nullable = false)
+    private boolean edited;
+
     @ManyToOne(cascade = CascadeType.REFRESH, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

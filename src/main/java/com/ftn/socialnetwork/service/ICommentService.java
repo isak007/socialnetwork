@@ -1,6 +1,7 @@
 package com.ftn.socialnetwork.service;
 
 import com.ftn.socialnetwork.model.Comment;
+import com.ftn.socialnetwork.model.dto.CommentDTO;
 
 import java.util.List;
 
@@ -8,11 +9,11 @@ public interface ICommentService {
 
     Comment findOne(Long id);
 
-    List<Comment> findAll();
+    List<Comment> findAllForPost(String token, Long postId);
 
-    Comment save(Comment comment);
+    Comment save(String token, CommentDTO commentDTO);
 
-    Comment update(Comment comment);
+    Comment update(String token, CommentDTO commentDTO);
 
-    void delete(Long id);
+    void delete(String token, Long id);
 }

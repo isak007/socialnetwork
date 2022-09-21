@@ -18,7 +18,7 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = true)
+    @Column
     private String picture;
 
     @Column(nullable = false)
@@ -29,6 +29,9 @@ public class Post {
 
     @Column(nullable = false)
     private String visibility;
+
+    @Column(nullable = false)
+    private boolean edited;
 
     @ManyToOne(cascade = CascadeType.REFRESH, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

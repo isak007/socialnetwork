@@ -22,10 +22,10 @@ public class FriendRequest {
     private String requestStatus;
 
     @ManyToOne(cascade = CascadeType.REFRESH, optional = false)
-    @JoinColumn(name = "user_id", nullable = false,insertable = false,updatable = false)
+    @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
     @ManyToOne(cascade = CascadeType.REFRESH, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 }

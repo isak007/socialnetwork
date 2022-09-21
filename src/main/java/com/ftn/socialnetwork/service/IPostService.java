@@ -1,6 +1,7 @@
 package com.ftn.socialnetwork.service;
 
 import com.ftn.socialnetwork.model.Post;
+import com.ftn.socialnetwork.model.dto.PostDTO;
 
 import java.util.List;
 
@@ -8,11 +9,13 @@ public interface IPostService {
 
     Post findOne(Long id);
 
-    List<Post> findAll();
+    List<Post> findAllForMainPage(String token);
 
-    Post save(Post post);
+    List<Post> findAllForUser(String token, Long userId);
 
-    Post update(Post post);
+    Post save(String token, PostDTO postDTO);
 
-    void delete(Long id);
+    Post update(String token, PostDTO postDTO);
+
+    void delete(String token, Long id);
 }

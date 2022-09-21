@@ -11,8 +11,10 @@ public class CommentDTO {
 
     private String text;
 
-    private UserDTO userDTO;
+    private Long userId;
 
-    private PostDTO postDTO;
+    private Long postId;
+
+    private boolean edited;
 
 }

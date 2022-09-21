@@ -8,11 +8,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface FriendRequestMapper {
 
-    @Mapping(target = "senderDTO", source = "sender")
-    @Mapping(target = "receiverDTO", source = "receiver")
+    @Mapping(target = "senderId", source = "sender.id")
+    @Mapping(target = "receiverId", source = "receiver.id")
     FriendRequestDTO toDto(FriendRequest friendRequest);
 
-    @Mapping(target = "sender", source = "senderDTO")
-    @Mapping(target = "receiver", source = "receiverDTO")
+    @Mapping(target = "sender.id", source = "senderId")
+    @Mapping(target = "receiver.id", source = "receiverId")
     FriendRequest toEntity(FriendRequestDTO friendRequestDTO);
 }

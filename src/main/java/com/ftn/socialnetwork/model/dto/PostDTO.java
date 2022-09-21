@@ -15,6 +15,5 @@ public class PostDTO {
 
     private String visibility;
 
-    private UserDTO userDTO;
-
+    private boolean edited;
 }

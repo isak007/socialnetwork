@@ -9,8 +9,8 @@ public class FriendRequestDTO {
 
     private String requestStatus;
 
-    private UserDTO senderDTO;
+    private Long senderId;
 
-    private UserDTO receiverDTO;
+    private Long receiverId;
 
 }

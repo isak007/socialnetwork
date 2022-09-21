@@ -3,9 +3,7 @@ package com.ftn.socialnetwork.model.dto;
 import lombok.Data;
 
 @Data
-public class UserDTO {
-
-    private Long id;
+public class RegistrationDTO {
 
     private String username;
 
@@ -20,7 +18,5 @@ public class UserDTO {
     private String dateOfBirth;
 
     private String city;
-
-    private String profilePicture;
 
 }
