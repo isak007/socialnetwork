@@ -2,6 +2,7 @@ package com.ftn.socialnetwork.service.implementation;
 
 import com.ftn.socialnetwork.model.FriendRequest;
 import com.ftn.socialnetwork.model.Post;
+import com.ftn.socialnetwork.model.PostWithData;
 import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.PostDTO;
 import com.ftn.socialnetwork.repository.FriendRequestRepository;
@@ -24,13 +25,19 @@ import static java.lang.String.format;
 @Service
 public class PostService implements IPostService {
 
+    private final PostLikeService postLikeService;
+    private final CommentService commentService;
     private final PostRepository postRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserMapper userMapper;
     private final UserService userService;
 
-    public PostService(PostRepository postRepository, FriendRequestRepository friendRequestRepository, JwtTokenUtil jwtTokenUtil, UserMapper userMapper, UserService userService) {
+    public PostService(PostLikeService postLikeService, CommentService commentService, PostRepository postRepository,
+                       FriendRequestRepository friendRequestRepository, JwtTokenUtil jwtTokenUtil,
+                       UserMapper userMapper, UserService userService) {
+        this.postLikeService = postLikeService;
+        this.commentService = commentService;
         this.postRepository = postRepository;
         this.friendRequestRepository = friendRequestRepository;
         this.jwtTokenUtil = jwtTokenUtil;
@@ -49,12 +56,12 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public List<Post> findAllForUser(String token, Long userId) {
+    public List<PostWithData> findAllForUser(String token, Long userId) {
 
         // if user is on his own profile
         if (Long.valueOf(jwtTokenUtil.getUserId(token)).equals(userId)) {
             // creating posts list with personal posts
-            return new ArrayList<>(postRepository.findByUserId(userId));
+            return getPostsWithData(token, postRepository.findByUserId(userId));
         }
 
         // else
@@ -70,13 +77,29 @@ public class PostService implements IPostService {
             // adding posts visible to EVERYONE
             posts.addAll(postRepository.findByUserIdAndVisibility(userId, "PUBLIC"));
 
-            return posts;
+            return getPostsWithData(token, posts);
         }
 
     }
 
+    public List<PostWithData> getPostsWithData(String token, List<Post> posts){
+        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+
+        List<PostWithData> postsWithData = new ArrayList<>();
+        for (Post post: posts){
+            PostWithData postWithData = new PostWithData();
+            postWithData.setPost(post);
+            postWithData.setPostLikes(postLikeService.findAllForPost(token, post.getId()));
+            postWithData.setComments(commentService.findAllForPost(token,post.getId()));
+            postWithData.setLiked(postLikeService.userLikedPost(userId, post.getId()));
+            postsWithData.add(postWithData);
+        }
+
+        return postsWithData;
+    }
+
     @Override
-    public List<Post> findAllForMainPage(String token) {
+    public List<PostWithData> findAllForMainPage(String token) {
         Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
         // finding all accepted friend request for user
         List<FriendRequest> friendRequests = friendRequestRepository.
@@ -103,7 +126,7 @@ public class PostService implements IPostService {
             }
         }
 
-        return posts;
+        return getPostsWithData(token, posts);
     }
 
     @Override

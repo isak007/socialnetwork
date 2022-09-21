@@ -1,10 +1,8 @@
 package com.ftn.socialnetwork.controller;
 
 import com.ftn.socialnetwork.model.dto.FriendRequestDTO;
-import com.ftn.socialnetwork.service.IPostService;
 import com.ftn.socialnetwork.service.implementation.FriendRequestService;
 import com.ftn.socialnetwork.util.mapper.FriendRequestMapper;
-import com.ftn.socialnetwork.util.mapper.PostMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,17 +17,12 @@ import java.util.stream.Collectors;
 public class FriendRequestController {
 
     private final FriendRequestService friendRequestService;
-    private final IPostService postService;
-    private final PostMapper postMapper;
     private final FriendRequestMapper friendRequestMapper;
 
-    public FriendRequestController(FriendRequestService friendRequestService, IPostService postService, PostMapper postMapper, FriendRequestMapper friendRequestMapper) {
+    public FriendRequestController(FriendRequestService friendRequestService, FriendRequestMapper friendRequestMapper) {
         this.friendRequestService = friendRequestService;
-        this.postService = postService;
-        this.postMapper = postMapper;
         this.friendRequestMapper = friendRequestMapper;
     }
-
 
     @GetMapping
     public ResponseEntity<List<FriendRequestDTO>> findAllForUser(HttpServletRequest request) {

@@ -65,4 +65,18 @@ public class ApiExceptionHandler {
 
         return new ResponseEntity<>(exceptionMessage, badRequest);
     }
+
+    @ExceptionHandler(value = {EntityExistsException.class})
+    public ResponseEntity<Object> entityExistsException(EntityExistsException e){
+
+        HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+
+        ExceptionMessage exceptionMessage = new ExceptionMessage(
+                e.getMessage(),
+                badRequest,
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(exceptionMessage, badRequest);
+    }
 }

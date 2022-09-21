@@ -1,6 +1,7 @@
 package com.ftn.socialnetwork.service;
 
 import com.ftn.socialnetwork.model.CommentLike;
+import com.ftn.socialnetwork.model.dto.CommentLikeDTO;
 
 import java.util.List;
 
@@ -8,11 +9,9 @@ public interface ICommentLikeService {
 
     CommentLike findOne(Long id);
 
-    List<CommentLike> findAll();
+    List<CommentLike> findAllForComment(String token, Long commentId);
 
-    CommentLike save(CommentLike commentLike);
+    CommentLike save(String token, CommentLikeDTO commentLikeDTO);
 
-    CommentLike update(CommentLike commentLike);
-
-    void delete(Long id);
+    void delete(String token, Long id);
 }

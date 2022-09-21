@@ -7,8 +7,8 @@ public class PostLikeDTO {
 
     private Long id;
 
-    private PostDTO postDTO;
+    private Long postId;
 
-    private UserDTO userDTO;
+    private Long userId;
 
 }

@@ -7,8 +7,8 @@ public class CommentLikeDTO {
 
     private Long id;
 
-    private CommentDTO commentDTO;
+    private Long commentId;
 
-    private UserDTO userDTO;
+    private Long userId;
 
 }

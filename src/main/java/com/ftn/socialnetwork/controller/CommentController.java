@@ -2,11 +2,7 @@ package com.ftn.socialnetwork.controller;
 
 import com.ftn.socialnetwork.model.dto.CommentDTO;
 import com.ftn.socialnetwork.service.ICommentService;
-import com.ftn.socialnetwork.service.IPostService;
-import com.ftn.socialnetwork.service.implementation.FriendRequestService;
 import com.ftn.socialnetwork.util.mapper.CommentMapper;
-import com.ftn.socialnetwork.util.mapper.FriendRequestMapper;
-import com.ftn.socialnetwork.util.mapper.PostMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,22 +18,11 @@ public class CommentController {
 
     private final CommentMapper commentMapper;
     private final ICommentService commentService;
-    private final FriendRequestService friendRequestService;
-    private final IPostService postService;
-    private final PostMapper postMapper;
-    private final FriendRequestMapper friendRequestMapper;
 
-    public CommentController(CommentMapper commentMapper, ICommentService commentService,
-                             FriendRequestService friendRequestService, IPostService postService, PostMapper postMapper,
-                             FriendRequestMapper friendRequestMapper) {
+    public CommentController(CommentMapper commentMapper, ICommentService commentService) {
         this.commentMapper = commentMapper;
         this.commentService = commentService;
-        this.friendRequestService = friendRequestService;
-        this.postService = postService;
-        this.postMapper = postMapper;
-        this.friendRequestMapper = friendRequestMapper;
     }
-
 
     @GetMapping(value = "post/{id}")
     public ResponseEntity<List<CommentDTO>> findAllForPost(HttpServletRequest request, @PathVariable(value = "id") Long postId) {

@@ -8,11 +8,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {UserMapper.class, CommentMapper.class})
 public interface CommentLikeMapper {
 
-    @Mapping(target = "userDTO", source = "user")
-    @Mapping(target = "commentDTO", source = "comment")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "commentId", source = "comment.id")
     CommentLikeDTO toDto(CommentLike commentLike);
 
-    @Mapping(target = "user", source = "userDTO")
-    @Mapping(target = "comment", source = "commentDTO")
+    @Mapping(target = "user.id", source = "userId")
+    @Mapping(target = "comment.id", source = "commentId")
     CommentLike toEntity(CommentLikeDTO commentLikeDTO);
 }

@@ -8,11 +8,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {UserMapper.class, PostMapper.class})
 public interface PostLikeMapper {
 
-    @Mapping(target = "userDTO", source = "user")
-    @Mapping(target = "postDTO", source = "post")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "postId", source = "post.id")
     PostLikeDTO toDto(PostLike postLike);
 
-    @Mapping(target = "user", source = "userDTO")
-    @Mapping(target = "post", source = "postDTO")
+    @Mapping(target = "user.id", source = "userId")
+    @Mapping(target = "post.id", source = "postId")
     PostLike toEntity(PostLikeDTO postLikeDTO);
 }

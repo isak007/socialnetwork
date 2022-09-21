@@ -1,6 +1,7 @@
 package com.ftn.socialnetwork.service;
 
 import com.ftn.socialnetwork.model.PostLike;
+import com.ftn.socialnetwork.model.dto.PostLikeDTO;
 
 import java.util.List;
 
@@ -8,11 +9,9 @@ public interface IPostLikeService {
 
     PostLike findOne(Long id);
 
-    List<PostLike> findAll();
+    List<PostLike> findAllForPost(String token, Long postId);
 
-    PostLike save(PostLike postLike);
+    PostLike save(String token, PostLikeDTO postLikeDTO);
 
-    PostLike update(PostLike postLike);
-
-    void delete(Long id);
+    void delete(String token, Long id);
 }
