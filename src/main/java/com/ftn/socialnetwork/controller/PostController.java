@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "posts")
+@CrossOrigin("http://localhost:8081/")
 public class PostController {
 
     private final PostWithDataMapper postWithDataMapper;

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "comment-likes")
+@CrossOrigin("http://localhost:8081/")
 public class CommentLikeController {
 
     private final ICommentLikeService commentLikeService;

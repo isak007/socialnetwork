@@ -43,6 +43,11 @@ public class UserService implements IUserService {
         return user.get();
     }
 
+    @Override
+    public List<User> findUsers(String searchTerm) {
+        return userRepository.searchByFirstNameLastNameUsername(searchTerm);
+    }
+
 
     public Boolean areFriends(Long user1id, Long user2id){
         return friendRequestRepository.findBySenderIdAndReceiverIdAndRequestStatus(user1id, user2id, "ACCEPTED").isPresent() ||

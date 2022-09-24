@@ -17,10 +17,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController
 @RequestMapping(value = "users")
+@CrossOrigin("http://localhost:8081/")
 public class UserController {
 
     private final IUserService userService;
@@ -34,6 +37,12 @@ public class UserController {
         this.userMapper = userMapper;
         this.jwtTokenUtil = jwtTokenUtil;
         this.authenticationManager = authenticationManager;
+    }
+
+
+    @GetMapping(value = "search/{searchTerm}")
+    public ResponseEntity<List<UserDTO>> findUsers(@PathVariable String searchTerm) {
+        return new ResponseEntity<List<UserDTO>>(userService.findUsers(searchTerm).stream().map(userMapper::toDto).collect(Collectors.toList()), HttpStatus.OK);
     }
 
 

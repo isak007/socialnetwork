@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "comments")
+@CrossOrigin("http://localhost:8081/")
 public class CommentController {
 
     private final CommentMapper commentMapper;

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "friend-requests")
+@CrossOrigin("http://localhost:8081/")
 public class FriendRequestController {
 
     private final FriendRequestService friendRequestService;
