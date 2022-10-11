@@ -1,8 +1,6 @@
 package com.ftn.socialnetwork.service.implementation;
 
-import com.ftn.socialnetwork.model.Comment;
-import com.ftn.socialnetwork.model.Post;
-import com.ftn.socialnetwork.model.User;
+import com.ftn.socialnetwork.model.*;
 import com.ftn.socialnetwork.model.dto.CommentDTO;
 import com.ftn.socialnetwork.repository.CommentRepository;
 import com.ftn.socialnetwork.repository.PostRepository;
@@ -10,9 +8,12 @@ import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.ICommentService;
 import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -24,13 +25,15 @@ public class CommentService implements ICommentService {
     private final PostRepository postRepository;
     private final JwtTokenUtil jwtTokenUtil;
     private final CommentRepository commentRepository;
+    private final CommentLikeService commentLikeService;
 
     public CommentService(UserService userService, PostRepository postRepository, JwtTokenUtil jwtTokenUtil,
-                          CommentRepository commentRepository) {
+                          CommentRepository commentRepository, CommentLikeService commentLikeService) {
         this.userService = userService;
         this.postRepository = postRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.commentRepository = commentRepository;
+        this.commentLikeService = commentLikeService;
     }
 
 
@@ -43,9 +46,24 @@ public class CommentService implements ICommentService {
         return comment.get();
     }
 
+    public List<CommentWithData> getCommentsWithData(String token, Page<Comment> comments){
+        Long userId = jwtTokenUtil.getUserId(token);
+
+        List<CommentWithData> commentsWithData = new ArrayList<>();
+        for (Comment comment: comments){
+            CommentWithData commentWithData = new CommentWithData();
+            commentWithData.setComment(comment);
+            commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, comment.getId()));
+            commentWithData.setLiked(commentLikeService.userLikedComment(userId, comment.getId()));
+            commentsWithData.add(commentWithData);
+        }
+
+        return commentsWithData;
+    }
+
     @Override
-    public List<Comment> findAllForPost(String token, Long postId) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+    public List<CommentWithData> findAllForPost(String token, Long postId, Pageable pageable) {
+        Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Post> postOpt = postRepository.findById(postId);
         if (postOpt.isEmpty()){
@@ -63,12 +81,12 @@ public class CommentService implements ICommentService {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-        return commentRepository.findByPostId(postId);
+        return getCommentsWithData(token, commentRepository.findByPostId(postId,pageable));
     }
 
     @Override
-    public Comment save(String token, CommentDTO commentDTO) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+    public CommentWithData save(String token, CommentDTO commentDTO) {
+        Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Post> postOpt = postRepository.findById(commentDTO.getPostId());
         if (postOpt.isEmpty()){
@@ -92,18 +110,24 @@ public class CommentService implements ICommentService {
         }
 
         Comment comment = new Comment();
-        comment.setDatePosted(LocalDateTime.now().toString());
+        comment.setDatePosted(LocalDateTime.now().toString().substring(0,16).replace("T"," "));
         comment.setUser(user);
         comment.setPost(post);
         comment.setText(commentDTO.getText());
         comment.setEdited(false);
 
-        return commentRepository.save(comment);
+        Comment commentReturned = commentRepository.save(comment);
+
+        CommentWithData commentWithData = new CommentWithData();
+        commentWithData.setComment(commentReturned);
+        commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, commentReturned.getId()));
+        commentWithData.setLiked(commentLikeService.userLikedComment(userId, commentReturned.getId()));
+        return commentWithData;
     }
 
     @Override
     public Comment update(String token, CommentDTO commentDTO) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Post> postOpt = postRepository.findById(commentDTO.getPostId());
         if (postOpt.isEmpty()){
@@ -138,7 +162,7 @@ public class CommentService implements ICommentService {
 
     @Override
     public void delete(String token, Long id) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Comment> commentOpt = commentRepository.findById(id);
         if (commentOpt.isEmpty()){

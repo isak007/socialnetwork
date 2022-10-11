@@ -21,11 +21,11 @@ public class FriendRequest {
     @Column(nullable = false)
     private String requestStatus;
 
-    @ManyToOne(cascade = CascadeType.REFRESH, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
-    @ManyToOne(cascade = CascadeType.REFRESH, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 }

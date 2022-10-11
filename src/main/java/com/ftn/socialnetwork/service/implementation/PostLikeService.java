@@ -49,7 +49,7 @@ public class PostLikeService implements IPostLikeService {
 
     @Override
     public List<PostLike> findAllForPost(String token, Long postId) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Post> postOpt = postRepository.findById(postId);
         if (postOpt.isEmpty()){
@@ -72,7 +72,7 @@ public class PostLikeService implements IPostLikeService {
 
     @Override
     public PostLike save(String token, PostLikeDTO postLikeDTO) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         if (postLikeRepository.findByUserIdAndPostId(userId,postLikeDTO.getPostId()).isPresent()){
             throw new EntityExistsException("This entity has already been created.");
@@ -107,18 +107,19 @@ public class PostLikeService implements IPostLikeService {
     }
 
     @Override
-    public void delete(String token, Long id) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+    public void delete(String token, PostLikeDTO postLikeDTO) {
+        Long userId = jwtTokenUtil.getUserId(token);
 
-        Optional<PostLike> postLikeOpt = postLikeRepository.findById(id);
+        // if user wasn't the one who liked the post, forbid disliking/deleting
+        if (!postLikeDTO.getUserId().equals(userId)){
+            throw new UnauthorizedException("You are not authorized for this action.");
+        }
+
+        Optional<PostLike> postLikeOpt = postLikeRepository.findByUserIdAndPostId(postLikeDTO.getUserId(),postLikeDTO.getPostId());
         if (postLikeOpt.isEmpty()){
             throw new EntityNotFoundException("The like you are trying to delete does not exist.");
         }
         PostLike postLike = postLikeOpt.get();
-        // if user wasn't the one who liked the post, forbid disliking/deleting
-        if (!postLike.getUser().getId().equals(userId)){
-            throw new UnauthorizedException("You are not authorized for this action.");
-        }
 
         Optional<Post> postOpt = postRepository.findById(postLike.getPost().getId());
         if (postOpt.isEmpty()){
@@ -136,6 +137,6 @@ public class PostLikeService implements IPostLikeService {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-        postLikeRepository.deleteById(id);
+        postLikeRepository.deleteById(postLike.getId());
     }
 }

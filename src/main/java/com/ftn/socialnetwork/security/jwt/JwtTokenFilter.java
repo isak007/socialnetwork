@@ -1,4 +1,5 @@
 package com.ftn.socialnetwork.security.jwt;
+import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.repository.UserRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,6 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 import static java.util.List.of;
 import static java.util.Optional.ofNullable;
@@ -44,9 +46,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             return;
         }
 
+        // if user account is not yet activated and if user is using jwt for account activation
+        // trying to access functionalities
+        String username = jwtTokenUtil.getUsername(token);
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent() && !userOptional.get().isActivated()){
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Get user identity and set it on the spring security context
         UserDetails userDetails = userRepository
-                .findByUsername(jwtTokenUtil.getUsername(token))
+                .findByUsername(username)
                 .orElse(null);
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

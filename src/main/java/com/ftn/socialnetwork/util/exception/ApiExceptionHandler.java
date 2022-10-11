@@ -79,4 +79,18 @@ public class ApiExceptionHandler {
 
         return new ResponseEntity<>(exceptionMessage, badRequest);
     }
+
+    @ExceptionHandler(value = {InvalidEmailException.class})
+    public ResponseEntity<Object> invalidEmailException(InvalidEmailException e){
+
+        HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+
+        ExceptionMessage exceptionMessage = new ExceptionMessage(
+                e.getMessage(),
+                badRequest,
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(exceptionMessage, badRequest);
+    }
 }

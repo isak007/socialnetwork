@@ -1,13 +1,17 @@
 package com.ftn.socialnetwork.controller;
 
 import com.ftn.socialnetwork.model.dto.CommentDTO;
+import com.ftn.socialnetwork.model.dto.CommentWithDataDTO;
 import com.ftn.socialnetwork.service.ICommentService;
 import com.ftn.socialnetwork.util.mapper.CommentMapper;
+import com.ftn.socialnetwork.util.mapper.CommentWithDataMapper;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,29 +22,34 @@ import java.util.stream.Collectors;
 public class CommentController {
 
     private final CommentMapper commentMapper;
+    private final CommentWithDataMapper commentWithDataMapper;
     private final ICommentService commentService;
+    private final int commentsPerPage = 3;
 
-    public CommentController(CommentMapper commentMapper, ICommentService commentService) {
+    public CommentController(CommentMapper commentMapper, CommentWithDataMapper commentWithDataMapper, ICommentService commentService) {
         this.commentMapper = commentMapper;
+        this.commentWithDataMapper = commentWithDataMapper;
         this.commentService = commentService;
     }
 
     @GetMapping(value = "post/{id}")
-    public ResponseEntity<List<CommentDTO>> findAllForPost(HttpServletRequest request, @PathVariable(value = "id") Long postId) {
+    public ResponseEntity<List<CommentWithDataDTO>> findAllForPost(HttpServletRequest request,
+                                                                   @PathParam(value = "page") Integer page,
+                                                                   @PathVariable(value = "id") Long postId) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        return new ResponseEntity<List<CommentDTO>>(
-                commentService.findAllForPost(token, postId).stream().map(commentMapper::toDto).collect(Collectors.toList()),
+        return new ResponseEntity<List<CommentWithDataDTO>>(
+                commentService.findAllForPost(token, postId, PageRequest.of(page, this.commentsPerPage)).stream().map(commentWithDataMapper::toDto).collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<CommentDTO> createComment(HttpServletRequest request, @RequestBody CommentDTO commentDTO) {
+    public ResponseEntity<CommentWithDataDTO> createComment(HttpServletRequest request, @RequestBody CommentDTO commentDTO) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        return new ResponseEntity<CommentDTO>(commentMapper.toDto(commentService.save(token,commentDTO)), HttpStatus.OK);
+        return new ResponseEntity<CommentWithDataDTO>(commentWithDataMapper.toDto(commentService.save(token,commentDTO)), HttpStatus.OK);
     }
 
     @PutMapping

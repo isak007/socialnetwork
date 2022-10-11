@@ -16,4 +16,6 @@ public class PostDTO {
     private String visibility;
 
     private boolean edited;
+
+    private Long userId;
 }

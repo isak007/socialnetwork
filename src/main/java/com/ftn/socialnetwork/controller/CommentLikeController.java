@@ -45,12 +45,12 @@ public class CommentLikeController {
     }
 
 
-    @DeleteMapping(value = "{id}")
-    public ResponseEntity<Void> deleteCommentLike(HttpServletRequest request, @PathVariable(value = "id") Long id){
+    @DeleteMapping
+    public ResponseEntity<Void> deleteCommentLike(HttpServletRequest request, @RequestBody CommentLikeDTO commentLikeDTO){
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        commentLikeService.delete(token, id);
+        commentLikeService.delete(token, commentLikeDTO);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

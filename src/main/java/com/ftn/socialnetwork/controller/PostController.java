@@ -51,11 +51,11 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostDTO> createPost(HttpServletRequest request, @RequestBody PostDTO postDTO) {
+    public ResponseEntity<PostWithDataDTO> createPost(HttpServletRequest request, @RequestBody PostDTO postDTO) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        return new ResponseEntity<PostDTO>(postMapper.toDto(postService.save(token,postDTO)), HttpStatus.OK);
+        return new ResponseEntity<PostWithDataDTO>(postWithDataMapper.toDto(postService.save(token,postDTO)), HttpStatus.OK);
     }
 
     @PutMapping

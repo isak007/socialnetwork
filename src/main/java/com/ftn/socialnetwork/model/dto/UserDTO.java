@@ -9,8 +9,6 @@ public class UserDTO {
 
     private String username;
 
-    private String password;
-
     private String email;
 
     private String firstName;
@@ -22,5 +20,7 @@ public class UserDTO {
     private String city;
 
     private String profilePicture;
+
+    private String profileDescription;
 
 }

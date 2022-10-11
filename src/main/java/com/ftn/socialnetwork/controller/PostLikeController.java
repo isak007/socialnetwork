@@ -45,12 +45,12 @@ public class PostLikeController {
     }
 
 
-    @DeleteMapping(value = "{id}")
-    public ResponseEntity<Void> deletePostLike(HttpServletRequest request, @PathVariable(value = "id") Long id){
+    @DeleteMapping
+    public ResponseEntity<Void> deletePostLike(HttpServletRequest request, @RequestBody PostLikeDTO postLikeDTO){
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        postLikeService.delete(token, id);
+        postLikeService.delete(token, postLikeDTO);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

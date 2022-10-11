@@ -3,11 +3,15 @@ package com.ftn.socialnetwork.security.jwt;
 import com.ftn.socialnetwork.model.User;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 
 @Component
 @RequiredArgsConstructor
@@ -33,9 +37,8 @@ public class JwtTokenUtil {
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .claim("authorities", user.getAuthorities())
+                .claim("userId",user.getId())
                 // userId is optional
-                .setId(String.valueOf(user.getId()))
-                /*.claim("userId", user.getId())*/
                 .signWith(SIGNATURE_ALGORITHM, jwtSecret)
                 .compact();
     }
@@ -58,22 +61,10 @@ public class JwtTokenUtil {
         return claims.getSubject();
     }
 
-    public String getUserId(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(jwtSecret)
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getId();
-    }
-
-    /*
-    public String getUserId(String token) {
+    public Long getUserId(String token) {
         //------------ Decode JWT ------------
         String[] split_string = token.split("\\.");
-        String base64EncodedHeader = split_string[0];
         String base64EncodedBody = split_string[1];
-        String base64EncodedSignature = split_string[2];
 
         //~~~~~~~~~ JWT Header ~~~~~~~
         Base64 base64Url = new Base64(true);
@@ -90,14 +81,14 @@ public class JwtTokenUtil {
         {
             if (pair.contains("userId")){
                 userId = pair.split(":")[1];
-                userId = userId.substring(1, userId.length()-1);
+                //userId = userId.substring(1, userId.length()-1);
                 break;
             }
         }
 
         System.out.println("Returned user id: "+userId);
-        return userId;
-    }*/
+        return userId != null ? Long.valueOf(userId) : null;
+    }
 
     public boolean validate(String token) {
         try {

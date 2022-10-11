@@ -14,7 +14,7 @@ public interface IPostService {
 
     List<PostWithData> findAllForUser(String token, Long userId);
 
-    Post save(String token, PostDTO postDTO);
+    PostWithData save(String token, PostDTO postDTO);
 
     Post update(String token, PostDTO postDTO);
 

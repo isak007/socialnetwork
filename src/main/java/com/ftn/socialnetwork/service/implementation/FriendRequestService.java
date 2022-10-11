@@ -10,6 +10,7 @@ import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -40,13 +41,36 @@ public class FriendRequestService implements IFriendRequestService {
 
     @Override
     public List<FriendRequest> findAllForUser(String token) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
         return friendRequestRepository.findByReceiverIdAndRequestStatus(userId, "PENDING");
     }
 
     @Override
+    public List<User> findFriendsForUser(String token, Long userId) {
+        Long sessionUserId = jwtTokenUtil.getUserId(token);
+        // if user is trying to view some other user's friends list
+        // that he's not a friend of
+        if (!sessionUserId.equals(userId) && !userService.areFriends(sessionUserId,userId)){
+            throw new UnauthorizedException("You are not authorized for this action.");
+        }
+
+        List<User> friends = new ArrayList<>();
+        List<FriendRequest> sentAcceptedRequests = friendRequestRepository.findBySenderIdAndRequestStatus(userId,"ACCEPTED");
+        List<FriendRequest> receivedAcceptedRequests = friendRequestRepository.findByReceiverIdAndRequestStatus(userId,"ACCEPTED");
+
+        for (FriendRequest friendRequest : sentAcceptedRequests){
+            friends.add(friendRequest.getReceiver());
+        }
+        for (FriendRequest friendRequest : receivedAcceptedRequests){
+            friends.add(friendRequest.getSender());
+        }
+
+        return friends;
+    }
+
+    @Override
     public FriendRequest save(String token, FriendRequestDTO friendRequestDTO) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
         if (!friendRequestDTO.getSenderId().equals(userId) || friendRequestDTO.getReceiverId().equals(userId)){
             throw new UnauthorizedException("You are not authorized for this action.");
         }
@@ -64,7 +88,7 @@ public class FriendRequestService implements IFriendRequestService {
 
     @Override
     public FriendRequest update(String token, FriendRequestDTO friendRequestDTO) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
         if (friendRequestDTO.getSenderId().equals(userId) || !friendRequestDTO.getReceiverId().equals(userId)){
             throw new UnauthorizedException("You are not authorized for this action.");
         }
@@ -88,7 +112,7 @@ public class FriendRequestService implements IFriendRequestService {
         }
 
         FriendRequest friendRequest = friendRequestOpt.get();
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
         if (!friendRequest.getReceiver().getId().equals(userId)){
             throw new UnauthorizedException("You are not authorized for this action.");
         }

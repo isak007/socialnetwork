@@ -4,6 +4,7 @@ import com.ftn.socialnetwork.model.*;
 import com.ftn.socialnetwork.model.dto.CommentLikeDTO;
 import com.ftn.socialnetwork.repository.CommentLikeRepository;
 import com.ftn.socialnetwork.repository.CommentRepository;
+import com.ftn.socialnetwork.repository.PostRepository;
 import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.ICommentLikeService;
 import com.ftn.socialnetwork.util.exception.EntityExistsException;
@@ -22,12 +23,14 @@ public class CommentLikeService implements ICommentLikeService {
     private final JwtTokenUtil jwtTokenUtil;
     private final CommentRepository commentRepository;
     private final UserService userService;
+    private final PostRepository postRepository;
 
-    public CommentLikeService(CommentLikeRepository commentLikeRepository, JwtTokenUtil jwtTokenUtil, CommentRepository commentRepository, UserService userService) {
+    public CommentLikeService(CommentLikeRepository commentLikeRepository, JwtTokenUtil jwtTokenUtil, CommentRepository commentRepository, UserService userService, PostRepository postRepository) {
         this.commentLikeRepository = commentLikeRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.commentRepository = commentRepository;
         this.userService = userService;
+        this.postRepository = postRepository;
     }
 
     @Override
@@ -39,9 +42,14 @@ public class CommentLikeService implements ICommentLikeService {
         return commentLike.get();
     }
 
+    public boolean userLikedComment(Long userId, Long commentId){
+        Optional<CommentLike> commentLikeOpt = commentLikeRepository.findByUserIdAndCommentId(userId, commentId);
+        return commentLikeOpt.isPresent();
+    }
+
     @Override
     public List<CommentLike> findAllForComment(String token, Long commentId) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Comment> commentOpt = commentRepository.findById(commentId);
         if (commentOpt.isEmpty()){
@@ -64,7 +72,7 @@ public class CommentLikeService implements ICommentLikeService {
 
     @Override
     public CommentLike save(String token, CommentLikeDTO commentLikeDTO) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         if (commentLikeRepository.findByUserIdAndCommentId(userId,commentLikeDTO.getCommentId()).isPresent()){
             throw new EntityExistsException("This entity has already been created.");
@@ -99,20 +107,29 @@ public class CommentLikeService implements ICommentLikeService {
     }
 
     @Override
-    public void delete(String token, Long id) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+    public void delete(String token, CommentLikeDTO commentLikeDTO) {
+        Long userId = jwtTokenUtil.getUserId(token);
 
-        Optional<CommentLike> commentLikeOpt = commentLikeRepository.findById(id);
+        // if user wasn't the one who liked the post, forbid disliking/deleting
+        if (!commentLikeDTO.getUserId().equals(userId)){
+            throw new UnauthorizedException("You are not authorized for this action.");
+        }
+
+        Optional<CommentLike> commentLikeOpt = commentLikeRepository.findByUserIdAndCommentId(commentLikeDTO.getUserId(),commentLikeDTO.getCommentId());
         if (commentLikeOpt.isEmpty()){
             throw new EntityNotFoundException("The like you are trying to delete does not exist.");
         }
         CommentLike commentLike = commentLikeOpt.get();
-        // if user wasn't the one who liked the comment, forbid disliking/deleting
-        if (!commentLike.getUser().getId().equals(userId)){
-            throw new UnauthorizedException("You are not authorized for this action.");
+
+        if (commentLike.getComment() == null){
+            throw new EntityNotFoundException("The comment whose like you are trying to delete does not exist.");
         }
 
-        Post post = commentLikeOpt.get().getComment().getPost();
+        Optional<Post> postOpt = postRepository.findById(commentLike.getComment().getPost().getId());
+        if (postOpt.isEmpty()){
+            throw new EntityNotFoundException("The post whose like you are trying to delete does not exist.");
+        }
+        Post post = postOpt.get();
         // if user is not a friend of a post owner and post is not visible to PUBLIC, forbid disliking/deleting
         if (!post.getUser().getId().equals(userId) && !userService.areFriends(userId, post.getUser().getId()) &&
                 !post.getVisibility().equals("PUBLIC")){
@@ -124,6 +141,6 @@ public class CommentLikeService implements ICommentLikeService {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-        commentLikeRepository.deleteById(id);
+        commentLikeRepository.deleteById(commentLike.getId());
     }
 }

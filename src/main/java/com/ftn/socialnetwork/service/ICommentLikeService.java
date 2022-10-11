@@ -13,5 +13,5 @@ public interface ICommentLikeService {
 
     CommentLike save(String token, CommentLikeDTO commentLikeDTO);
 
-    void delete(String token, Long id);
+    void delete(String token, CommentLikeDTO commentLikeDTO);
 }

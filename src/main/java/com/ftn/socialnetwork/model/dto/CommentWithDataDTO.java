@@ -5,11 +5,11 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class PostWithDataDTO {
+public class CommentWithDataDTO {
 
-    private PostDTO postDTO;
+    private CommentDTO commentDTO;
 
-    private List<PostLikeDTO> postLikesDTO;
+    private List<CommentLikeDTO> commentLikesDTO;
 
     private boolean liked;
 }

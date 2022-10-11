@@ -13,5 +13,5 @@ public interface IPostLikeService {
 
     PostLike save(String token, PostLikeDTO postLikeDTO);
 
-    void delete(String token, Long id);
+    void delete(String token, PostLikeDTO postLikeDTO);
 }

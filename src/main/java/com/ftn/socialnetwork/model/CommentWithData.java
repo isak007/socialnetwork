@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.util.List;
 
 @Getter
@@ -11,10 +12,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class PostWithData {
+public class CommentWithData {
 
-    private Post post;
-    private List<PostLike> postLikes;
+    private Comment comment;
+    private List<CommentLike> commentLikes;
     private boolean liked;
 
 }

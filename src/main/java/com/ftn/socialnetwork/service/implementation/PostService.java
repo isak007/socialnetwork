@@ -1,9 +1,6 @@
 package com.ftn.socialnetwork.service.implementation;
 
-import com.ftn.socialnetwork.model.FriendRequest;
-import com.ftn.socialnetwork.model.Post;
-import com.ftn.socialnetwork.model.PostWithData;
-import com.ftn.socialnetwork.model.User;
+import com.ftn.socialnetwork.model.*;
 import com.ftn.socialnetwork.model.dto.PostDTO;
 import com.ftn.socialnetwork.repository.FriendRequestRepository;
 import com.ftn.socialnetwork.repository.PostRepository;
@@ -59,7 +56,7 @@ public class PostService implements IPostService {
     public List<PostWithData> findAllForUser(String token, Long userId) {
 
         // if user is on his own profile
-        if (Long.valueOf(jwtTokenUtil.getUserId(token)).equals(userId)) {
+        if (jwtTokenUtil.getUserId(token).equals(userId)) {
             // creating posts list with personal posts
             return getPostsWithData(token, postRepository.findByUserId(userId));
         }
@@ -67,7 +64,7 @@ public class PostService implements IPostService {
         // else
         else {
             List<Post> posts = new ArrayList<>();
-            Long sessionUserId = Long.valueOf(jwtTokenUtil.getUserId(token));
+            Long sessionUserId = jwtTokenUtil.getUserId(token);
 
             // adding posts visible to FRIENDS if friends
             if (userService.areFriends(sessionUserId, userId)){
@@ -83,14 +80,13 @@ public class PostService implements IPostService {
     }
 
     public List<PostWithData> getPostsWithData(String token, List<Post> posts){
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         List<PostWithData> postsWithData = new ArrayList<>();
         for (Post post: posts){
             PostWithData postWithData = new PostWithData();
             postWithData.setPost(post);
             postWithData.setPostLikes(postLikeService.findAllForPost(token, post.getId()));
-            postWithData.setComments(commentService.findAllForPost(token,post.getId()));
             postWithData.setLiked(postLikeService.userLikedPost(userId, post.getId()));
             postsWithData.add(postWithData);
         }
@@ -100,7 +96,7 @@ public class PostService implements IPostService {
 
     @Override
     public List<PostWithData> findAllForMainPage(String token) {
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
         // finding all accepted friend request for user
         List<FriendRequest> friendRequests = friendRequestRepository.
                 findBySenderIdAndRequestStatus(userId, "ACCEPTED");
@@ -130,9 +126,9 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public Post save(String token, PostDTO postDTO) {
+    public PostWithData save(String token, PostDTO postDTO) {
         // validate if user is creating post for himself
-        Long userId = Long.valueOf(jwtTokenUtil.getUserId(token));
+        Long userId = jwtTokenUtil.getUserId(token);
 
         User user = userService.findOne(userId);
         if (user == null){
@@ -142,12 +138,18 @@ public class PostService implements IPostService {
         Post post = new Post();
         post.setPicture(postDTO.getPicture());
         post.setText(postDTO.getText());
-        post.setDatePosted(LocalDateTime.now().toString());
+        post.setDatePosted(LocalDateTime.now().toString().substring(0,16).replace("T"," "));
         post.setVisibility(postDTO.getVisibility());
         post.setUser(user);
         post.setEdited(false);
 
-        return postRepository.save(post);
+        Post postReturned = postRepository.save(post);
+
+        PostWithData postWithData = new PostWithData();
+        postWithData.setPost(postReturned);
+        postWithData.setPostLikes(postLikeService.findAllForPost(token, postReturned.getId()));
+        postWithData.setLiked(postLikeService.userLikedPost(userId, postReturned.getId()));
+        return postWithData;
     }
 
     @Override
@@ -159,7 +161,7 @@ public class PostService implements IPostService {
 
         Post post = postOpt.get();
         // validate if user is editing his post
-        if (!Long.valueOf(jwtTokenUtil.getUserId(token)).equals(post.getUser().getId())){
+        if (!jwtTokenUtil.getUserId(token).equals(post.getUser().getId())){
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
@@ -179,7 +181,7 @@ public class PostService implements IPostService {
         }
 
         // validate if user owns the post he's trying to delete
-        if (!postOpt.get().getUser().getId().equals(Long.valueOf(jwtTokenUtil.getUserId(token)))){
+        if (!postOpt.get().getUser().getId().equals(jwtTokenUtil.getUserId(token))){
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 

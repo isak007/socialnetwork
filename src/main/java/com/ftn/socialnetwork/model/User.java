@@ -9,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -47,8 +48,26 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String city;
 
-    @Column(unique = true)
+    @Column
     private String profilePicture;
+
+    @Column(nullable = false)
+    private String profileDescription;
+
+    @Column(nullable = false)
+    private boolean activated;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Post> posts;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Comment> comments;
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
+    private List<FriendRequest> sentFriendRequests;
+
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
+    private List<FriendRequest> receivedFriendRequests;
 
     public User() {
         authorities.add(new SimpleGrantedAuthority("USER"));
@@ -62,7 +81,6 @@ public class User implements UserDetails {
         return password;
     }
 
-    // Spring security works with usernames which, in our case, is an email.
     @Override
     public String getUsername() {
         return this.username;

@@ -1,8 +1,10 @@
 package com.ftn.socialnetwork.controller;
 
 import com.ftn.socialnetwork.model.dto.FriendRequestDTO;
+import com.ftn.socialnetwork.model.dto.UserDTO;
 import com.ftn.socialnetwork.service.implementation.FriendRequestService;
 import com.ftn.socialnetwork.util.mapper.FriendRequestMapper;
+import com.ftn.socialnetwork.util.mapper.UserMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +21,12 @@ public class FriendRequestController {
 
     private final FriendRequestService friendRequestService;
     private final FriendRequestMapper friendRequestMapper;
+    private final UserMapper userMapper;
 
-    public FriendRequestController(FriendRequestService friendRequestService, FriendRequestMapper friendRequestMapper) {
+    public FriendRequestController(FriendRequestService friendRequestService, FriendRequestMapper friendRequestMapper, UserMapper userMapper) {
         this.friendRequestService = friendRequestService;
         this.friendRequestMapper = friendRequestMapper;
+        this.userMapper = userMapper;
     }
 
     @GetMapping
@@ -32,6 +36,16 @@ public class FriendRequestController {
 
         return new ResponseEntity<List<FriendRequestDTO>>(
                 friendRequestService.findAllForUser(token).stream().map(friendRequestMapper::toDto).collect(Collectors.toList()),
+                HttpStatus.OK);
+    }
+
+    @GetMapping(value="friends/{userId}")
+    public ResponseEntity<List<UserDTO>> findFriendsForUser(HttpServletRequest request, @PathVariable Long userId) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        return new ResponseEntity<List<UserDTO>>(
+                friendRequestService.findFriendsForUser(token,userId).stream().map(userMapper::toDto).collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 

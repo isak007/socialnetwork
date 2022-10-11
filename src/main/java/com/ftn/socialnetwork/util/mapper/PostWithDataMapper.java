@@ -10,12 +10,10 @@ public interface PostWithDataMapper {
 
 
     @Mapping(target = "postDTO", source = "post")
-    @Mapping(target = "commentsDTO", source = "comments")
     @Mapping(target = "postLikesDTO", source = "postLikes")
     PostWithDataDTO toDto(PostWithData postWithData);
 
     @Mapping(target = "post", source = "postDTO")
-    @Mapping(target = "comments", source = "commentsDTO")
     @Mapping(target = "postLikes", source = "postLikesDTO")
     PostWithData toEntity(PostWithDataDTO postWithDataDTO);
 }
