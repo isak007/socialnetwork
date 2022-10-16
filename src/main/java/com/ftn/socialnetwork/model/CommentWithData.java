@@ -15,7 +15,8 @@ import java.util.List;
 public class CommentWithData {
 
     private Comment comment;
-    private List<CommentLike> commentLikes;
+    private List<User> commentLikes;
+    private int totalLikes;
     private boolean liked;
 
 }

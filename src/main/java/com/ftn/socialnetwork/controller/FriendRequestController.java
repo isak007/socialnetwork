@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,12 +41,14 @@ public class FriendRequestController {
     }
 
     @GetMapping(value="friends/{userId}")
-    public ResponseEntity<List<UserDTO>> findFriendsForUser(HttpServletRequest request, @PathVariable Long userId) {
+    public ResponseEntity<List<UserDTO>> findFriendsForUser(HttpServletRequest request,
+                                                            @PathParam(value = "page") Integer page,
+                                                            @PathVariable Long userId) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
         return new ResponseEntity<List<UserDTO>>(
-                friendRequestService.findFriendsForUser(token,userId).stream().map(userMapper::toDto).collect(Collectors.toList()),
+                friendRequestService.findFriendsForUser(token,userId, page).stream().map(userMapper::toDto).collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 

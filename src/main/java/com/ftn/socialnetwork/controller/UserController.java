@@ -3,7 +3,6 @@ package com.ftn.socialnetwork.controller;
 import com.ftn.socialnetwork.model.dto.CreateEditUserDTO;
 import com.ftn.socialnetwork.model.dto.UserDTO;
 import com.ftn.socialnetwork.model.dto.JwtDTO;
-import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.model.dto.LoginDTO;
 import com.ftn.socialnetwork.service.IUserService;
 import com.ftn.socialnetwork.util.mapper.UserMapper;
@@ -12,7 +11,6 @@ import com.ftn.socialnetwork.util.validators.OnUpdate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,15 +29,10 @@ public class UserController {
 
     private final IUserService userService;
     private final UserMapper userMapper;
-    private final JwtTokenUtil jwtTokenUtil;
-    private final AuthenticationManager authenticationManager;
 
-    public UserController(IUserService userService, UserMapper userMapper,
-                          JwtTokenUtil jwtTokenUtil, AuthenticationManager authenticationManager) {
+    public UserController(IUserService userService, UserMapper userMapper) {
         this.userService = userService;
         this.userMapper = userMapper;
-        this.jwtTokenUtil = jwtTokenUtil;
-        this.authenticationManager = authenticationManager;
     }
 
 

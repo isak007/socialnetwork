@@ -9,7 +9,9 @@ public class CommentWithDataDTO {
 
     private CommentDTO commentDTO;
 
-    private List<CommentLikeDTO> commentLikesDTO;
+    private List<UserDTO> commentLikesDTO;
+
+    private int totalLikes;
 
     private boolean liked;
 }

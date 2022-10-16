@@ -10,9 +10,9 @@ public interface IPostService {
 
     Post findOne(Long id);
 
-    List<PostWithData> findAllForMainPage(String token);
+    List<PostWithData> findAllForMainPage(String token, int page);
 
-    List<PostWithData> findAllForUser(String token, Long userId);
+    List<PostWithData> findAllForUser(String token, Long userId, int page);
 
     PostWithData save(String token, PostDTO postDTO);
 

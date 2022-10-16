@@ -9,14 +9,14 @@ import com.ftn.socialnetwork.service.ICommentService;
 import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 public class CommentService implements ICommentService {
@@ -26,6 +26,8 @@ public class CommentService implements ICommentService {
     private final JwtTokenUtil jwtTokenUtil;
     private final CommentRepository commentRepository;
     private final CommentLikeService commentLikeService;
+    private final int commentsPerPage = 4;
+
 
     public CommentService(UserService userService, PostRepository postRepository, JwtTokenUtil jwtTokenUtil,
                           CommentRepository commentRepository, CommentLikeService commentLikeService) {
@@ -46,14 +48,16 @@ public class CommentService implements ICommentService {
         return comment.get();
     }
 
-    public List<CommentWithData> getCommentsWithData(String token, Page<Comment> comments){
+    public List<CommentWithData> getCommentsWithData(String token, List<Comment> comments){
         Long userId = jwtTokenUtil.getUserId(token);
 
         List<CommentWithData> commentsWithData = new ArrayList<>();
         for (Comment comment: comments){
             CommentWithData commentWithData = new CommentWithData();
             commentWithData.setComment(comment);
-            commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, comment.getId()));
+            Page<User> commentLikesPage = commentLikeService.findAllForComment(token, comment.getId(),0);
+            commentWithData.setCommentLikes(commentLikesPage.getContent());
+            commentWithData.setTotalLikes((int)commentLikesPage.getTotalElements());
             commentWithData.setLiked(commentLikeService.userLikedComment(userId, comment.getId()));
             commentsWithData.add(commentWithData);
         }
@@ -62,7 +66,7 @@ public class CommentService implements ICommentService {
     }
 
     @Override
-    public List<CommentWithData> findAllForPost(String token, Long postId, Pageable pageable) {
+    public List<CommentWithData> findAllForPost(String token, Long postId, int page) {
         Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Post> postOpt = postRepository.findById(postId);
@@ -81,7 +85,18 @@ public class CommentService implements ICommentService {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-        return getCommentsWithData(token, commentRepository.findByPostId(postId,pageable));
+        List<CommentWithData> commentsWithData = getCommentsWithData(token, commentRepository.findAllByPostId(postId));
+        // sorting
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        commentsWithData.sort(Comparator.comparing(c -> LocalDateTime.parse(c.getComment().getDatePosted(), formatter)));
+        Collections.reverse(commentsWithData);
+
+        Pageable pageable = PageRequest.of(page,this.commentsPerPage);
+        final int start = (int)pageable.getOffset();
+        final int end = Math.min((start + pageable.getPageSize()), commentsWithData.size());
+        final Page<CommentWithData> commentsWithDataPage = new PageImpl<>(commentsWithData.subList(start, end), pageable, commentsWithData.size());
+
+        return commentsWithDataPage.getContent();
     }
 
     @Override
@@ -120,8 +135,8 @@ public class CommentService implements ICommentService {
 
         CommentWithData commentWithData = new CommentWithData();
         commentWithData.setComment(commentReturned);
-        commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, commentReturned.getId()));
-        commentWithData.setLiked(commentLikeService.userLikedComment(userId, commentReturned.getId()));
+//        commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, commentReturned.getId()));
+//        commentWithData.setLiked(commentLikeService.userLikedComment(userId, commentReturned.getId()));
         return commentWithData;
     }
 

@@ -12,7 +12,7 @@ public interface IFriendRequestService {
 
     List<FriendRequest> findAllForUser(String token);
 
-    List<User> findFriendsForUser(String token, Long userId);
+    List<User> findFriendsForUser(String token, Long userId, int page);
 
     FriendRequest save(String token, FriendRequestDTO friendRequestDTO);
 

@@ -5,7 +5,7 @@ import com.ftn.socialnetwork.model.dto.PostWithDataDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {PostMapper.class, CommentMapper.class, PostLikeMapper.class})
+@Mapper(componentModel = "spring", uses = {PostMapper.class, CommentMapper.class, UserMapper.class})
 public interface PostWithDataMapper {
 
 

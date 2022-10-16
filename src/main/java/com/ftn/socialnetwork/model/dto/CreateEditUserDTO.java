@@ -60,7 +60,6 @@ public class CreateEditUserDTO {
     private String profilePicture;
 
     @Null(groups = OnCreate.class)
-    @NotNull(groups = OnUpdate.class)
     @Size(max=100)
     private String profileDescription;
 

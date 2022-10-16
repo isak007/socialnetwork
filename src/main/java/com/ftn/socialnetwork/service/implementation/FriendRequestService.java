@@ -8,6 +8,10 @@ import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.IFriendRequestService;
 import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,6 +27,8 @@ public class FriendRequestService implements IFriendRequestService {
     private final FriendRequestRepository friendRequestRepository;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserService userService;
+    private final int friendsPerPage = 21;
+
 
     public FriendRequestService(FriendRequestRepository friendRequestRepository, JwtTokenUtil jwtTokenUtil, UserService userService) {
         this.friendRequestRepository = friendRequestRepository;
@@ -46,7 +52,7 @@ public class FriendRequestService implements IFriendRequestService {
     }
 
     @Override
-    public List<User> findFriendsForUser(String token, Long userId) {
+    public List<User> findFriendsForUser(String token, Long userId, int page) {
         Long sessionUserId = jwtTokenUtil.getUserId(token);
         // if user is trying to view some other user's friends list
         // that he's not a friend of
@@ -65,7 +71,12 @@ public class FriendRequestService implements IFriendRequestService {
             friends.add(friendRequest.getSender());
         }
 
-        return friends;
+        Pageable pageable = PageRequest.of(page,this.friendsPerPage);
+        final int start = (int)pageable.getOffset();
+        final int end = Math.min((start + pageable.getPageSize()), friends.size());
+        final Page<User> friendsPage = new PageImpl<>(friends.subList(start, end), pageable, friends.size());
+
+        return friendsPage.getContent();
     }
 
     @Override

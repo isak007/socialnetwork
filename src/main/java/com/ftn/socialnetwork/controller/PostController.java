@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,22 +32,24 @@ public class PostController {
 
 
     @GetMapping
-    public ResponseEntity<List<PostWithDataDTO>> findAllForMainPage(HttpServletRequest request) {
+    public ResponseEntity<List<PostWithDataDTO>> findAllForMainPage(HttpServletRequest request, @PathParam(value = "page") Integer page) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
         return new ResponseEntity<List<PostWithDataDTO>>(
-                postService.findAllForMainPage(token).stream().map(postWithDataMapper::toDto).collect(Collectors.toList()),
+                postService.findAllForMainPage(token, page).stream().map(postWithDataMapper::toDto).collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 
     @GetMapping(value = "user/{userId}")
-    public ResponseEntity<List<PostWithDataDTO>> findAllForUser(HttpServletRequest request, @PathVariable Long userId) {
+    public ResponseEntity<List<PostWithDataDTO>> findAllForUser(HttpServletRequest request,
+                                                                @PathParam(value = "page") Integer page,
+                                                                @PathVariable Long userId) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
         return new ResponseEntity<List<PostWithDataDTO>>(
-                postService.findAllForUser(token, userId).stream().map(postWithDataMapper::toDto).collect(Collectors.toList()),
+                postService.findAllForUser(token, userId, page).stream().map(postWithDataMapper::toDto).collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 

@@ -11,8 +11,13 @@ import com.ftn.socialnetwork.service.IPostLikeService;
 import com.ftn.socialnetwork.util.exception.EntityExistsException;
 import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -24,6 +29,8 @@ public class PostLikeService implements IPostLikeService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final JwtTokenUtil jwtTokenUtil;
+    private final int usersPerPage = 15;
+
 
     public PostLikeService(UserService userService, PostRepository postRepository,
                            PostLikeRepository postLikeRepository, JwtTokenUtil jwtTokenUtil) {
@@ -48,7 +55,7 @@ public class PostLikeService implements IPostLikeService {
     }
 
     @Override
-    public List<PostLike> findAllForPost(String token, Long postId) {
+    public Page<User> findAllForPost(String token, Long postId, int page) {
         Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Post> postOpt = postRepository.findById(postId);
@@ -67,11 +74,22 @@ public class PostLikeService implements IPostLikeService {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-        return postLikeRepository.findByPostId(postId);
+        List<PostLike> postLikes = postLikeRepository.findByPostId(postId);
+        List<User> users = new ArrayList<>();
+        for (PostLike postLike : postLikes){
+            users.add(postLike.getUser());
+        }
+
+        Pageable pageable = PageRequest.of(page,this.usersPerPage);
+        final int start = (int)pageable.getOffset();
+        final int end = Math.min((start + pageable.getPageSize()), users.size());
+        final Page<User> usersPage = new PageImpl<>(users.subList(start, end), pageable, users.size());
+
+        return usersPage;
     }
 
     @Override
-    public PostLike save(String token, PostLikeDTO postLikeDTO) {
+    public User save(String token, PostLikeDTO postLikeDTO) {
         Long userId = jwtTokenUtil.getUserId(token);
 
         if (postLikeRepository.findByUserIdAndPostId(userId,postLikeDTO.getPostId()).isPresent()){
@@ -103,7 +121,8 @@ public class PostLikeService implements IPostLikeService {
         postLike.setPost(post);
         postLike.setUser(user);
 
-        return postLikeRepository.save(postLike);
+        postLikeRepository.save(postLike);
+        return user;
     }
 
     @Override

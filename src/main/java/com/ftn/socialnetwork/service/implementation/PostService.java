@@ -9,13 +9,16 @@ import com.ftn.socialnetwork.service.IPostService;
 import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
 import com.ftn.socialnetwork.util.mapper.UserMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static java.lang.String.format;
 
@@ -29,6 +32,10 @@ public class PostService implements IPostService {
     private final JwtTokenUtil jwtTokenUtil;
     private final UserMapper userMapper;
     private final UserService userService;
+    private final String PROFILE_TYPE = "profile";
+    private final String POST_TYPE = "post";
+    private final int postsPerPage = 3;
+
 
     public PostService(PostLikeService postLikeService, CommentService commentService, PostRepository postRepository,
                        FriendRequestRepository friendRequestRepository, JwtTokenUtil jwtTokenUtil,
@@ -53,12 +60,30 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public List<PostWithData> findAllForUser(String token, Long userId) {
+    public List<PostWithData> findAllForUser(String token, Long userId, int page) {
 
         // if user is on his own profile
         if (jwtTokenUtil.getUserId(token).equals(userId)) {
             // creating posts list with personal posts
-            return getPostsWithData(token, postRepository.findByUserId(userId));
+            List<PostWithData> postsWithData = getPostsWithData(token, postRepository.findByUserId(userId));
+            // sorting
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            postsWithData.sort(Comparator.comparing(p -> LocalDateTime.parse(p.getPost().getDatePosted(), formatter)));
+            Collections.reverse(postsWithData);
+
+            Pageable pageable = PageRequest.of(page,this.postsPerPage);
+            final int start = (int)pageable.getOffset();
+            final int end = Math.min((start + pageable.getPageSize()), postsWithData.size());
+            final Page<PostWithData> postsWithDataPage = new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
+
+
+            LocalDateTime from = LocalDateTime.now();
+            LocalDateTime to = LocalDateTime.now().minusMinutes(5);
+
+            Duration duration = Duration.between(from, to);
+            System.out.println(duration.getSeconds());
+
+            return postsWithDataPage.getContent();
         }
 
         // else
@@ -70,11 +95,21 @@ public class PostService implements IPostService {
             if (userService.areFriends(sessionUserId, userId)){
                 posts.addAll(postRepository.findByUserIdAndVisibility(userId,"FRIENDS"));
             }
-
             // adding posts visible to EVERYONE
             posts.addAll(postRepository.findByUserIdAndVisibility(userId, "PUBLIC"));
 
-            return getPostsWithData(token, posts);
+            List<PostWithData> postsWithData = getPostsWithData(token, posts);
+            // sorting
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            postsWithData.sort(Comparator.comparing(p -> LocalDateTime.parse(p.getPost().getDatePosted(), formatter)));
+            Collections.reverse(postsWithData);
+
+            Pageable pageable = PageRequest.of(page,this.postsPerPage);
+            final int start = (int)pageable.getOffset();
+            final int end = Math.min((start + pageable.getPageSize()), postsWithData.size());
+            final Page<PostWithData> postsWithDataPage = new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
+
+            return postsWithDataPage.getContent();
         }
 
     }
@@ -86,7 +121,9 @@ public class PostService implements IPostService {
         for (Post post: posts){
             PostWithData postWithData = new PostWithData();
             postWithData.setPost(post);
-            postWithData.setPostLikes(postLikeService.findAllForPost(token, post.getId()));
+            Page<User> postLikesPage = postLikeService.findAllForPost(token, post.getId(),0);
+            postWithData.setPostLikes(postLikesPage.getContent());
+            postWithData.setTotalLikes((int)postLikesPage.getTotalElements());
             postWithData.setLiked(postLikeService.userLikedPost(userId, post.getId()));
             postsWithData.add(postWithData);
         }
@@ -95,7 +132,7 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public List<PostWithData> findAllForMainPage(String token) {
+    public List<PostWithData> findAllForMainPage(String token, int page) {
         Long userId = jwtTokenUtil.getUserId(token);
         // finding all accepted friend request for user
         List<FriendRequest> friendRequests = friendRequestRepository.
@@ -122,7 +159,18 @@ public class PostService implements IPostService {
             }
         }
 
-        return getPostsWithData(token, posts);
+        List<PostWithData> postsWithData = getPostsWithData(token, posts);
+        // sorting
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        postsWithData.sort(Comparator.comparing(p -> LocalDateTime.parse(p.getPost().getDatePosted(), formatter)));
+        Collections.reverse(postsWithData);
+
+        Pageable pageable = PageRequest.of(page,this.postsPerPage);
+        final int start = (int)pageable.getOffset();
+        final int end = Math.min((start + pageable.getPageSize()), postsWithData.size());
+        final Page<PostWithData> postsWithDataPage = new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
+
+        return postsWithDataPage.getContent();
     }
 
     @Override
@@ -136,19 +184,23 @@ public class PostService implements IPostService {
         }
 
         Post post = new Post();
-        post.setPicture(postDTO.getPicture());
         post.setText(postDTO.getText());
         post.setDatePosted(LocalDateTime.now().toString().substring(0,16).replace("T"," "));
         post.setVisibility(postDTO.getVisibility());
         post.setUser(user);
         post.setEdited(false);
 
+        if(postDTO.getPicture() != null && !postDTO.getPicture().equals("") && postDTO.getPictureBase64() != null) {
+            post.setPicture(postDTO.getPicture());
+            userService.uploadPicture(post.getUser().getId(), postDTO.getPicture(), postDTO.getPictureBase64(),this.POST_TYPE);
+        }
+
         Post postReturned = postRepository.save(post);
 
         PostWithData postWithData = new PostWithData();
         postWithData.setPost(postReturned);
-        postWithData.setPostLikes(postLikeService.findAllForPost(token, postReturned.getId()));
-        postWithData.setLiked(postLikeService.userLikedPost(userId, postReturned.getId()));
+        //postWithData.setPostLikes(postLikeService.findAllForPost(token, postReturned.getId()));
+        //postWithData.setLiked(postLikeService.userLikedPost(userId, postReturned.getId()));
         return postWithData;
     }
 

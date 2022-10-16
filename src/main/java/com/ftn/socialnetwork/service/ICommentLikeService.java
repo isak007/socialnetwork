@@ -1,17 +1,17 @@
 package com.ftn.socialnetwork.service;
 
 import com.ftn.socialnetwork.model.CommentLike;
+import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.CommentLikeDTO;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface ICommentLikeService {
 
     CommentLike findOne(Long id);
 
-    List<CommentLike> findAllForComment(String token, Long commentId);
+    Page<User> findAllForComment(String token, Long commentId, int page);
 
-    CommentLike save(String token, CommentLikeDTO commentLikeDTO);
+    User save(String token, CommentLikeDTO commentLikeDTO);
 
     void delete(String token, CommentLikeDTO commentLikeDTO);
 }

@@ -14,7 +14,8 @@ import java.util.List;
 public class PostWithData {
 
     private Post post;
-    private List<PostLike> postLikes;
+    private List<User> postLikes;
+    private int totalLikes;
     private boolean liked;
 
 }

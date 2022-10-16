@@ -10,8 +10,13 @@ import com.ftn.socialnetwork.service.ICommentLikeService;
 import com.ftn.socialnetwork.util.exception.EntityExistsException;
 import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -24,6 +29,8 @@ public class CommentLikeService implements ICommentLikeService {
     private final CommentRepository commentRepository;
     private final UserService userService;
     private final PostRepository postRepository;
+    private final int usersPerPage = 15;
+
 
     public CommentLikeService(CommentLikeRepository commentLikeRepository, JwtTokenUtil jwtTokenUtil, CommentRepository commentRepository, UserService userService, PostRepository postRepository) {
         this.commentLikeRepository = commentLikeRepository;
@@ -48,7 +55,7 @@ public class CommentLikeService implements ICommentLikeService {
     }
 
     @Override
-    public List<CommentLike> findAllForComment(String token, Long commentId) {
+    public Page<User> findAllForComment(String token, Long commentId, int page) {
         Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Comment> commentOpt = commentRepository.findById(commentId);
@@ -67,11 +74,22 @@ public class CommentLikeService implements ICommentLikeService {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-        return commentLikeRepository.findByCommentId(commentId);
+        List<CommentLike> commentLikes = commentLikeRepository.findByCommentId(commentId);
+        List<User> users = new ArrayList<>();
+        for (CommentLike commentLike : commentLikes){
+            users.add(commentLike.getUser());
+        }
+
+        Pageable pageable = PageRequest.of(page,this.usersPerPage);
+        final int start = (int)pageable.getOffset();
+        final int end = Math.min((start + pageable.getPageSize()), users.size());
+        final Page<User> usersPage = new PageImpl<>(users.subList(start, end), pageable, users.size());
+
+        return usersPage;
     }
 
     @Override
-    public CommentLike save(String token, CommentLikeDTO commentLikeDTO) {
+    public User save(String token, CommentLikeDTO commentLikeDTO) {
         Long userId = jwtTokenUtil.getUserId(token);
 
         if (commentLikeRepository.findByUserIdAndCommentId(userId,commentLikeDTO.getCommentId()).isPresent()){
@@ -102,8 +120,9 @@ public class CommentLikeService implements ICommentLikeService {
         CommentLike commentLike = new CommentLike();
         commentLike.setUser(user);
         commentLike.setComment(commentOpt.get());
+        commentLikeRepository.save(commentLike);
 
-        return commentLikeRepository.save(commentLike);
+        return user;
     }
 
     @Override

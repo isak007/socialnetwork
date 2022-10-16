@@ -5,7 +5,7 @@ import com.ftn.socialnetwork.model.dto.CommentWithDataDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {CommentMapper.class, CommentLikeMapper.class})
+@Mapper(componentModel = "spring", uses = {CommentMapper.class, UserMapper.class})
 public interface CommentWithDataMapper {
 
 

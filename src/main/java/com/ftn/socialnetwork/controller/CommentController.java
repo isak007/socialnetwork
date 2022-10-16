@@ -5,7 +5,6 @@ import com.ftn.socialnetwork.model.dto.CommentWithDataDTO;
 import com.ftn.socialnetwork.service.ICommentService;
 import com.ftn.socialnetwork.util.mapper.CommentMapper;
 import com.ftn.socialnetwork.util.mapper.CommentWithDataMapper;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,6 @@ public class CommentController {
     private final CommentMapper commentMapper;
     private final CommentWithDataMapper commentWithDataMapper;
     private final ICommentService commentService;
-    private final int commentsPerPage = 3;
 
     public CommentController(CommentMapper commentMapper, CommentWithDataMapper commentWithDataMapper, ICommentService commentService) {
         this.commentMapper = commentMapper;
@@ -40,7 +38,7 @@ public class CommentController {
         String token = header.substring(7);
 
         return new ResponseEntity<List<CommentWithDataDTO>>(
-                commentService.findAllForPost(token, postId, PageRequest.of(page, this.commentsPerPage)).stream().map(commentWithDataMapper::toDto).collect(Collectors.toList()),
+                commentService.findAllForPost(token, postId, page).stream().map(commentWithDataMapper::toDto).collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 

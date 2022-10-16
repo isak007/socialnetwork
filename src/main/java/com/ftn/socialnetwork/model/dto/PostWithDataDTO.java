@@ -9,7 +9,9 @@ public class PostWithDataDTO {
 
     private PostDTO postDTO;
 
-    private List<PostLikeDTO> postLikesDTO;
+    private List<UserDTO> postLikesDTO;
+
+    private int totalLikes;
 
     private boolean liked;
 }
