@@ -39,11 +39,12 @@ public class PostLikeController {
                                                         @PathVariable Long postId){
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
+        // for testing purposes
+//        try {
+//            Thread.sleep(10 * 1000);
+//        } catch (InterruptedException ie) {
+//            Thread.currentThread().interrupt();
+//        }
 
         Page<User> postLikePage = postLikeService.findAllForPost(token, postId, page);
         LikesDTO likesDTO = new LikesDTO();

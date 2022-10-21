@@ -1,17 +1,19 @@
 package com.ftn.socialnetwork.controller;
 
+import com.ftn.socialnetwork.model.CommentWithData;
 import com.ftn.socialnetwork.model.dto.CommentDTO;
 import com.ftn.socialnetwork.model.dto.CommentWithDataDTO;
+import com.ftn.socialnetwork.model.dto.CommentsDTO;
 import com.ftn.socialnetwork.service.ICommentService;
 import com.ftn.socialnetwork.util.mapper.CommentMapper;
 import com.ftn.socialnetwork.util.mapper.CommentWithDataMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.websocket.server.PathParam;
-import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -31,15 +33,19 @@ public class CommentController {
     }
 
     @GetMapping(value = "post/{id}")
-    public ResponseEntity<List<CommentWithDataDTO>> findAllForPost(HttpServletRequest request,
+    public ResponseEntity<CommentsDTO> findAllForPost(HttpServletRequest request,
                                                                    @PathParam(value = "page") Integer page,
                                                                    @PathVariable(value = "id") Long postId) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        return new ResponseEntity<List<CommentWithDataDTO>>(
-                commentService.findAllForPost(token, postId, page).stream().map(commentWithDataMapper::toDto).collect(Collectors.toList()),
-                HttpStatus.OK);
+        Page<CommentWithData> commentsWithDataPage = commentService.findAllForPost(token, postId, page);
+
+        CommentsDTO commentsDTO = new CommentsDTO();
+        commentsDTO.setCommentsWithDataDTO(commentsWithDataPage.getContent().stream().map(commentWithDataMapper::toDto).collect(Collectors.toList()));
+        commentsDTO.setTotalComments((int)commentsWithDataPage.getTotalElements());
+
+        return new ResponseEntity<CommentsDTO>(commentsDTO,HttpStatus.OK);
     }
 
     @PostMapping

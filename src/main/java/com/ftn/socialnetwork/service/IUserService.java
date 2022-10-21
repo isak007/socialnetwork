@@ -3,7 +3,6 @@ package com.ftn.socialnetwork.service;
 import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.CreateEditUserDTO;
 import com.ftn.socialnetwork.model.dto.LoginDTO;
-
 import java.util.List;
 
 public interface IUserService {
@@ -14,13 +13,15 @@ public interface IUserService {
 
     void sendEmailVerificationCode(String token, String email);
 
-    List<User> findUsers(String searchTerm);
+    List<User> findUsers(String searchTerm, int page, int itemsPerPage);
 
     User findOne(Long id);
 
     List<User> findAll();
 
     User getUserData(String token, Long id);
+
+    User getUserData(String token, String username);
 
     void save(CreateEditUserDTO createEditUserDTO);
 

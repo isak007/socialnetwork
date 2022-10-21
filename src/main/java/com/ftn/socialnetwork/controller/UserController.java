@@ -37,8 +37,16 @@ public class UserController {
 
 
     @GetMapping(value = "search/{searchTerm}")
-    public ResponseEntity<List<UserDTO>> findUsers(@PathVariable String searchTerm) {
-        return new ResponseEntity<List<UserDTO>>(userService.findUsers(searchTerm).stream().map(userMapper::toDto).collect(Collectors.toList()), HttpStatus.OK);
+    public ResponseEntity<List<UserDTO>> findUsers(@PathVariable String searchTerm,
+                                                   @RequestParam("page") Integer page ,
+                                                   @RequestParam("itemsPerPage") Integer itemsPerPage) {
+        // for testing purposes
+//        try {
+//            Thread.sleep(10 * 1000);
+//        } catch (InterruptedException ie) {
+//            Thread.currentThread().interrupt();
+//        }
+        return new ResponseEntity<List<UserDTO>>(userService.findUsers(searchTerm,page,itemsPerPage).stream().map(userMapper::toDto).collect(Collectors.toList()), HttpStatus.OK);
     }
 
 
@@ -98,6 +106,14 @@ public class UserController {
         String token = header.substring(7);
 
         return new ResponseEntity<UserDTO>(userMapper.toDto(userService.getUserData(token,id)), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "fetch/username/{username}")
+    public ResponseEntity<UserDTO> getUserData(HttpServletRequest request, @PathVariable String username) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        return new ResponseEntity<UserDTO>(userMapper.toDto(userService.getUserData(token,username)), HttpStatus.OK);
     }
 
     @Validated(OnUpdate.class)

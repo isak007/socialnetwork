@@ -14,8 +14,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -60,7 +58,7 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public List<PostWithData> findAllForUser(String token, Long userId, int page) {
+    public Page<PostWithData> findAllForUser(String token, Long userId, int page) {
 
         // if user is on his own profile
         if (jwtTokenUtil.getUserId(token).equals(userId)) {
@@ -74,16 +72,16 @@ public class PostService implements IPostService {
             Pageable pageable = PageRequest.of(page,this.postsPerPage);
             final int start = (int)pageable.getOffset();
             final int end = Math.min((start + pageable.getPageSize()), postsWithData.size());
-            final Page<PostWithData> postsWithDataPage = new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
+            return new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
 
 
-            LocalDateTime from = LocalDateTime.now();
-            LocalDateTime to = LocalDateTime.now().minusMinutes(5);
+//            LocalDateTime from = LocalDateTime.now();
+//            LocalDateTime to = LocalDateTime.now().minusMinutes(5);
+//
+//            Duration duration = Duration.between(from, to);
+//            System.out.println(duration.getSeconds());
 
-            Duration duration = Duration.between(from, to);
-            System.out.println(duration.getSeconds());
-
-            return postsWithDataPage.getContent();
+//            return postsWithDataPage;
         }
 
         // else
@@ -107,9 +105,7 @@ public class PostService implements IPostService {
             Pageable pageable = PageRequest.of(page,this.postsPerPage);
             final int start = (int)pageable.getOffset();
             final int end = Math.min((start + pageable.getPageSize()), postsWithData.size());
-            final Page<PostWithData> postsWithDataPage = new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
-
-            return postsWithDataPage.getContent();
+            return new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
         }
 
     }
@@ -132,7 +128,7 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public List<PostWithData> findAllForMainPage(String token, int page) {
+    public Page<PostWithData> findAllForMainPage(String token, int page) {
         Long userId = jwtTokenUtil.getUserId(token);
         // finding all accepted friend request for user
         List<FriendRequest> friendRequests = friendRequestRepository.
@@ -168,9 +164,7 @@ public class PostService implements IPostService {
         Pageable pageable = PageRequest.of(page,this.postsPerPage);
         final int start = (int)pageable.getOffset();
         final int end = Math.min((start + pageable.getPageSize()), postsWithData.size());
-        final Page<PostWithData> postsWithDataPage = new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
-
-        return postsWithDataPage.getContent();
+        return new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
     }
 
     @Override
@@ -199,7 +193,7 @@ public class PostService implements IPostService {
 
         PostWithData postWithData = new PostWithData();
         postWithData.setPost(postReturned);
-        //postWithData.setPostLikes(postLikeService.findAllForPost(token, postReturned.getId()));
+        postWithData.setPostLikes(postLikeService.findAllForPost(token, postReturned.getId(),0).getContent());
         //postWithData.setLiked(postLikeService.userLikedPost(userId, postReturned.getId()));
         return postWithData;
     }

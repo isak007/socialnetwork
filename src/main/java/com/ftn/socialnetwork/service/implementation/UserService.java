@@ -14,6 +14,9 @@ import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
 import com.ftn.socialnetwork.util.exception.UsernameExistsException;
 import com.ftn.socialnetwork.util.mail.EmailService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -97,8 +100,10 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<User> findUsers(String searchTerm) {
-        return userRepository.searchByFirstNameLastNameUsername(searchTerm);
+    public List<User> findUsers(String searchTerm, int page, int itemsPerPage) {
+        Pageable pageable = PageRequest.of(page,itemsPerPage);
+        Page<User> usersFound = userRepository.searchByFirstNameLastNameUsername(searchTerm,pageable);
+        return usersFound.getContent();
     }
 
 
@@ -112,15 +117,34 @@ public class UserService implements IUserService {
     public User getUserData(String token, Long id) {
         // if user is not checking his own data, validate if he's a friend of a user
         // whose data he's trying to access
-        if (!jwtTokenUtil.getUserId(token).equals(id) &&
-                !this.areFriends(jwtTokenUtil.getUserId(token), id)) {
-            throw new UnauthorizedException("You are not authorized for this action.");
-        }
+//        if (!jwtTokenUtil.getUserId(token).equals(id) &&
+//                !this.areFriends(jwtTokenUtil.getUserId(token), id)) {
+//            throw new UnauthorizedException("You are not authorized for this action.");
+//        }
 
         Optional<User> user  = userRepository.findById(id);
         if (user.isEmpty()){
             throw new EntityNotFoundException(format("User with id '%s' not found.",id));
         }
+
+        return user.get();
+    }
+
+    @Override
+    public User getUserData(String token, String username) {
+
+        Optional<User> user  = userRepository.findByUsername(username);
+        if (user.isEmpty()){
+            throw new EntityNotFoundException(format("User with username '%s' not found.",username));
+        }
+
+        // if user is not checking his own data, validate if he's a friend of a user
+        // whose data he's trying to access
+//        Long sessionUserId = jwtTokenUtil.getUserId(token);
+//        if (!sessionUserId.equals(user.get().getId()) &&
+//                !this.areFriends(sessionUserId, user.get().getId())) {
+//            throw new UnauthorizedException("You are not authorized for this action.");
+//        }
 
         return user.get();
     }
@@ -254,6 +278,7 @@ public class UserService implements IUserService {
             user.setProfilePicture(null);
         }
         else if(userDTO.getProfilePicture() != null && !userDTO.getProfilePicture().equals("") && userDTO.getPictureBase64() != null) {
+            //userDTO.setProfilePicture(userDTO.getProfilePicture().replace(" ",""));
             user.setProfilePicture(userDTO.getProfilePicture());
             this.uploadPicture(jwtTokenUtil.getUserId(token), userDTO.getProfilePicture(), userDTO.getPictureBase64(),this.PROFILE_TYPE);
         }
@@ -291,8 +316,11 @@ public class UserService implements IUserService {
         System.out.println(outputfile.getAbsolutePath());
 
         try {
-            ImageIO.write(image, "png", outputfile);
-        } catch (IOException e) {
+            String[] pictureSplit = pictureName.split("\\.");
+            System.out.println(pictureSplit[pictureSplit.length-1]);
+            ImageIO.write(image, pictureSplit[pictureSplit.length-1], outputfile);
+        } catch (Exception e) {
+            System.out.println(e);
             throw new RuntimeException(e);
         }
     }

@@ -66,7 +66,7 @@ public class CommentService implements ICommentService {
     }
 
     @Override
-    public List<CommentWithData> findAllForPost(String token, Long postId, int page) {
+    public Page<CommentWithData> findAllForPost(String token, Long postId, int page) {
         Long userId = jwtTokenUtil.getUserId(token);
 
         Optional<Post> postOpt = postRepository.findById(postId);
@@ -94,9 +94,7 @@ public class CommentService implements ICommentService {
         Pageable pageable = PageRequest.of(page,this.commentsPerPage);
         final int start = (int)pageable.getOffset();
         final int end = Math.min((start + pageable.getPageSize()), commentsWithData.size());
-        final Page<CommentWithData> commentsWithDataPage = new PageImpl<>(commentsWithData.subList(start, end), pageable, commentsWithData.size());
-
-        return commentsWithDataPage.getContent();
+        return new PageImpl<>(commentsWithData.subList(start, end), pageable, commentsWithData.size());
     }
 
     @Override
@@ -135,7 +133,7 @@ public class CommentService implements ICommentService {
 
         CommentWithData commentWithData = new CommentWithData();
         commentWithData.setComment(commentReturned);
-//        commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, commentReturned.getId()));
+        commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, commentReturned.getId(),0).getContent());
 //        commentWithData.setLiked(commentLikeService.userLikedComment(userId, commentReturned.getId()));
         return commentWithData;
     }

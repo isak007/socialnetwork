@@ -1,6 +1,8 @@
 package com.ftn.socialnetwork.controller;
 
+import com.ftn.socialnetwork.model.FriendRequest;
 import com.ftn.socialnetwork.model.dto.FriendRequestDTO;
+import com.ftn.socialnetwork.model.dto.FriendRequestsDTO;
 import com.ftn.socialnetwork.model.dto.UserDTO;
 import com.ftn.socialnetwork.service.implementation.FriendRequestService;
 import com.ftn.socialnetwork.util.mapper.FriendRequestMapper;
@@ -30,14 +32,34 @@ public class FriendRequestController {
         this.userMapper = userMapper;
     }
 
-    @GetMapping
-    public ResponseEntity<List<FriendRequestDTO>> findAllForUser(HttpServletRequest request) {
+    @GetMapping("check-request")
+    public ResponseEntity<FriendRequestDTO> checkIfFriendRequestExists(HttpServletRequest request,
+                                                                        @PathParam(value = "user1Id") Long user1Id,
+                                                                        @PathParam(value = "user2Id") Long user2Id){
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        return new ResponseEntity<List<FriendRequestDTO>>(
-                friendRequestService.findAllForUser(token).stream().map(friendRequestMapper::toDto).collect(Collectors.toList()),
-                HttpStatus.OK);
+        FriendRequest friendRequest = friendRequestService.checkIfFriendRequestExists(token,user1Id,user2Id);
+        if (friendRequest == null){
+            return new ResponseEntity<FriendRequestDTO>(HttpStatus.OK);
+        }
+        return new ResponseEntity<FriendRequestDTO>(friendRequestMapper.toDto(friendRequest), HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<FriendRequestsDTO> findAllForUser(HttpServletRequest request, @PathParam(value = "page") Integer page) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        return new ResponseEntity<FriendRequestsDTO>(friendRequestService.findAllForUser(token, page), HttpStatus.OK);
+    }
+
+    @GetMapping(value="non-pending")
+    public ResponseEntity<FriendRequestsDTO> findAllNonPendingForUser(HttpServletRequest request, @PathParam(value = "page") Integer page) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        return new ResponseEntity<FriendRequestsDTO>(friendRequestService.findAllNonPendingForUser(token, page), HttpStatus.OK);
     }
 
     @GetMapping(value="friends/{userId}")

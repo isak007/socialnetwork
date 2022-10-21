@@ -3,16 +3,14 @@ package com.ftn.socialnetwork.service;
 import com.ftn.socialnetwork.model.Post;
 import com.ftn.socialnetwork.model.PostWithData;
 import com.ftn.socialnetwork.model.dto.PostDTO;
-
-import java.util.List;
-
+import org.springframework.data.domain.Page;
 public interface IPostService {
 
     Post findOne(Long id);
 
-    List<PostWithData> findAllForMainPage(String token, int page);
+    Page<PostWithData> findAllForMainPage(String token, int page);
 
-    List<PostWithData> findAllForUser(String token, Long userId, int page);
+    Page<PostWithData> findAllForUser(String token, Long userId, int page);
 
     PostWithData save(String token, PostDTO postDTO);
 
