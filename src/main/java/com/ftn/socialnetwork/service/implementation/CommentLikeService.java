@@ -4,6 +4,7 @@ import com.ftn.socialnetwork.model.*;
 import com.ftn.socialnetwork.model.dto.CommentLikeDTO;
 import com.ftn.socialnetwork.repository.CommentLikeRepository;
 import com.ftn.socialnetwork.repository.CommentRepository;
+import com.ftn.socialnetwork.repository.NotificationRepository;
 import com.ftn.socialnetwork.repository.PostRepository;
 import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.ICommentLikeService;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,15 +31,17 @@ public class CommentLikeService implements ICommentLikeService {
     private final CommentRepository commentRepository;
     private final UserService userService;
     private final PostRepository postRepository;
+    private final NotificationRepository notificationRepository;
     private final int usersPerPage = 15;
 
 
-    public CommentLikeService(CommentLikeRepository commentLikeRepository, JwtTokenUtil jwtTokenUtil, CommentRepository commentRepository, UserService userService, PostRepository postRepository) {
+    public CommentLikeService(CommentLikeRepository commentLikeRepository, JwtTokenUtil jwtTokenUtil, CommentRepository commentRepository, UserService userService, PostRepository postRepository, NotificationRepository notificationRepository) {
         this.commentLikeRepository = commentLikeRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.commentRepository = commentRepository;
         this.userService = userService;
         this.postRepository = postRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
@@ -121,6 +125,19 @@ public class CommentLikeService implements ICommentLikeService {
         commentLike.setUser(user);
         commentLike.setComment(commentOpt.get());
         commentLikeRepository.save(commentLike);
+
+        // create notification if comment owner is someone else
+        if (!commentLike.getComment().getUser().getId().equals(userId)) {
+            Notification notification = new Notification();
+            notification.setSender(user);
+            notification.setReceiver(commentLike.getComment().getUser());
+            notification.setObjectType("COMMENT");
+            notification.setObjectId(commentLike.getComment().getId());
+            notification.setActivityType("Liked comment");
+            notification.setDateCreated(LocalDateTime.now().toString().substring(0,23).replace("T", " "));
+            notification.setSeen(false);
+            notificationRepository.save(notification);
+        }
 
         return user;
     }

@@ -1,9 +1,11 @@
 package com.ftn.socialnetwork.service.implementation;
 
+import com.ftn.socialnetwork.model.Notification;
 import com.ftn.socialnetwork.model.Post;
 import com.ftn.socialnetwork.model.PostLike;
 import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.PostLikeDTO;
+import com.ftn.socialnetwork.repository.NotificationRepository;
 import com.ftn.socialnetwork.repository.PostLikeRepository;
 import com.ftn.socialnetwork.repository.PostRepository;
 import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -28,15 +31,17 @@ public class PostLikeService implements IPostLikeService {
     private final UserService userService;
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final NotificationRepository notificationRepository;
     private final JwtTokenUtil jwtTokenUtil;
     private final int usersPerPage = 15;
 
 
     public PostLikeService(UserService userService, PostRepository postRepository,
-                           PostLikeRepository postLikeRepository, JwtTokenUtil jwtTokenUtil) {
+                           PostLikeRepository postLikeRepository, NotificationRepository notificationRepository, JwtTokenUtil jwtTokenUtil) {
         this.userService = userService;
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
+        this.notificationRepository = notificationRepository;
         this.jwtTokenUtil = jwtTokenUtil;
     }
 
@@ -120,6 +125,19 @@ public class PostLikeService implements IPostLikeService {
         PostLike postLike = new PostLike();
         postLike.setPost(post);
         postLike.setUser(user);
+
+        // create notification if post owner is someone else
+        if (!post.getUser().getId().equals(userId)) {
+            Notification notification = new Notification();
+            notification.setSender(user);
+            notification.setReceiver(post.getUser());
+            notification.setObjectType("POST");
+            notification.setObjectId(post.getId());
+            notification.setActivityType("Liked post");
+            notification.setDateCreated(LocalDateTime.now().toString().substring(0,23).replace("T", " "));
+            notification.setSeen(false);
+            notificationRepository.save(notification);
+        }
 
         postLikeRepository.save(postLike);
         return user;

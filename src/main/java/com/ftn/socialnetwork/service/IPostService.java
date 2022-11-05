@@ -6,7 +6,7 @@ import com.ftn.socialnetwork.model.dto.PostDTO;
 import org.springframework.data.domain.Page;
 public interface IPostService {
 
-    Post findOne(Long id);
+    PostWithData findOne(String token, Long id);
 
     Page<PostWithData> findAllForMainPage(String token, int page);
 

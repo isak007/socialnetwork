@@ -13,4 +13,6 @@ public class FriendRequestDTO {
 
     private Long receiverId;
 
+    private String dateCreated;
+
 }

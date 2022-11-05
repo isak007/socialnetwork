@@ -1,11 +1,13 @@
 package com.ftn.socialnetwork.service.implementation;
 
 import com.ftn.socialnetwork.model.FriendRequest;
+import com.ftn.socialnetwork.model.Notification;
 import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.FriendRequestDTO;
 import com.ftn.socialnetwork.model.dto.FriendRequestWithDataDTO;
 import com.ftn.socialnetwork.model.dto.FriendRequestsDTO;
 import com.ftn.socialnetwork.repository.FriendRequestRepository;
+import com.ftn.socialnetwork.repository.NotificationRepository;
 import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.IFriendRequestService;
 import com.ftn.socialnetwork.util.exception.EntityExistsException;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -30,6 +33,7 @@ import static java.lang.String.format;
 public class FriendRequestService implements IFriendRequestService {
 
     private final FriendRequestRepository friendRequestRepository;
+    private final NotificationRepository notificationRepository;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserService userService;
     private final FriendRequestMapper friendRequestMapper;
@@ -38,9 +42,10 @@ public class FriendRequestService implements IFriendRequestService {
     private final int friendRequestsPerPage = 10;
 
 
-    public FriendRequestService(FriendRequestRepository friendRequestRepository, JwtTokenUtil jwtTokenUtil,
+    public FriendRequestService(FriendRequestRepository friendRequestRepository, NotificationRepository notificationRepository, JwtTokenUtil jwtTokenUtil,
                                 UserService userService, FriendRequestMapper friendRequestMapper, UserMapper userMapper) {
         this.friendRequestRepository = friendRequestRepository;
+        this.notificationRepository = notificationRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.userService = userService;
         this.friendRequestMapper = friendRequestMapper;
@@ -120,7 +125,7 @@ public class FriendRequestService implements IFriendRequestService {
     }
 
     @Override
-    public List<User> findFriendsForUser(String token, Long userId, int page) {
+    public Page<User> findFriendsForUser(String token, Long userId, int page) {
         Long sessionUserId = jwtTokenUtil.getUserId(token);
         // if user is trying to view some other user's friends list
         // that he's not a friend of
@@ -144,7 +149,7 @@ public class FriendRequestService implements IFriendRequestService {
         final int end = Math.min((start + pageable.getPageSize()), friends.size());
         final Page<User> friendsPage = new PageImpl<>(friends.subList(start, end), pageable, friends.size());
 
-        return friendsPage.getContent();
+        return friendsPage;
     }
 
     @Override
@@ -171,8 +176,22 @@ public class FriendRequestService implements IFriendRequestService {
         User receiver = userService.findOne(friendRequestDTO.getReceiverId());
         friendRequest.setSender(sender);
         friendRequest.setReceiver(receiver);
+        friendRequest.setDateCreated(LocalDateTime.now().toString().substring(0,23).replace("T"," "));
 
-        return friendRequestRepository.save(friendRequest);
+        FriendRequest friendRequestReturned = friendRequestRepository.save(friendRequest);
+
+        // create notification
+        Notification notification = new Notification();
+        notification.setSender(sender);
+        notification.setReceiver(receiver);
+        notification.setObjectType("FRIEND_REQUEST");
+        notification.setObjectId(friendRequestReturned.getId());
+        notification.setActivityType("Sent friend request");
+        notification.setDateCreated(LocalDateTime.now().toString().substring(0,23).replace("T", " "));
+        notification.setSeen(false);
+        notificationRepository.save(notification);
+
+        return friendRequestReturned;
     }
 
     @Override

@@ -1,10 +1,12 @@
 package com.ftn.socialnetwork.model;
 
-import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import javax.persistence.*;
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,23 +14,21 @@ import lombok.Setter;
 @AllArgsConstructor
 
 @Entity
-public class FriendRequest {
+public class Chat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String requestStatus;
+    @OneToMany(mappedBy = "chat", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ChatLine> chatLines;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "sender_id", nullable = false)
-    private User sender;
+    @JoinColumn(name = "user1_id", nullable = false)
+    private User user1;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "receiver_id", nullable = false)
-    private User receiver;
+    @JoinColumn(name = "user2_id", nullable = false)
+    private User user2;
 
-    @Column(nullable = false)
-    private String dateCreated;
 }

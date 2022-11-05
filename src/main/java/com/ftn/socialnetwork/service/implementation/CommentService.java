@@ -3,6 +3,7 @@ package com.ftn.socialnetwork.service.implementation;
 import com.ftn.socialnetwork.model.*;
 import com.ftn.socialnetwork.model.dto.CommentDTO;
 import com.ftn.socialnetwork.repository.CommentRepository;
+import com.ftn.socialnetwork.repository.NotificationRepository;
 import com.ftn.socialnetwork.repository.PostRepository;
 import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.ICommentService;
@@ -26,26 +27,40 @@ public class CommentService implements ICommentService {
     private final JwtTokenUtil jwtTokenUtil;
     private final CommentRepository commentRepository;
     private final CommentLikeService commentLikeService;
-    private final int commentsPerPage = 4;
+    private final NotificationRepository notificationRepository;
+    final int commentsPerPage = 4;
 
 
     public CommentService(UserService userService, PostRepository postRepository, JwtTokenUtil jwtTokenUtil,
-                          CommentRepository commentRepository, CommentLikeService commentLikeService) {
+                          CommentRepository commentRepository, CommentLikeService commentLikeService, NotificationRepository notificationRepository) {
         this.userService = userService;
         this.postRepository = postRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.commentRepository = commentRepository;
         this.commentLikeService = commentLikeService;
+        this.notificationRepository = notificationRepository;
     }
 
 
     @Override
-    public Comment findOne(Long id) {
-        Optional<Comment> comment = commentRepository.findById(id);
-        if(comment.isEmpty()) {
+    public Comment findOne(String token, Long id) {
+        Long userId = jwtTokenUtil.getUserId(token);
+
+        Optional<Comment> commentOpt = commentRepository.findById(id);
+        if(commentOpt.isEmpty()) {
             throw new NoSuchElementException("Comment with id = " + id + " not found!");
         }
-        return comment.get();
+        Comment comment = commentOpt.get();
+        if (!comment.getUser().getId().equals(userId) && !comment.getPost().getUser().getId().equals(userId)) {
+            if (comment.getPost().getVisibility().equals("FRIENDS") && !userService.areFriends(userId, comment.getPost().getUser().getId())){
+                throw new UnauthorizedException("You are not authorized for this action.");
+            }
+            else if (comment.getPost().getVisibility().equals("ME")){
+                throw new UnauthorizedException("You are not authorized for this action.");
+            }
+        }
+
+        return comment;
     }
 
     public List<CommentWithData> getCommentsWithData(String token, List<Comment> comments){
@@ -130,6 +145,19 @@ public class CommentService implements ICommentService {
         comment.setEdited(false);
 
         Comment commentReturned = commentRepository.save(comment);
+
+        // create notification if post owner is someone else
+        if (!comment.getPost().getUser().getId().equals(userId)) {
+            Notification notification = new Notification();
+            notification.setSender(comment.getUser());
+            notification.setReceiver(comment.getPost().getUser());
+            notification.setObjectType("COMMENT");
+            notification.setObjectId(comment.getId());
+            notification.setActivityType("Commented on a post");
+            notification.setDateCreated(LocalDateTime.now().toString().substring(0,23).replace("T", " "));
+            notification.setSeen(false);
+            notificationRepository.save(notification);
+        }
 
         CommentWithData commentWithData = new CommentWithData();
         commentWithData.setComment(commentReturned);

@@ -48,6 +48,14 @@ public class CommentController {
         return new ResponseEntity<CommentsDTO>(commentsDTO,HttpStatus.OK);
     }
 
+    @GetMapping(value = "{id}")
+    public ResponseEntity<CommentDTO> getUserData(HttpServletRequest request, @PathVariable Long id) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        return new ResponseEntity<CommentDTO>(commentMapper.toDto(commentService.findOne(token,id)), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<CommentWithDataDTO> createComment(HttpServletRequest request, @RequestBody CommentDTO commentDTO) {
         String header = request.getHeader("Authorization");

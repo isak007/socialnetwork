@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 
 public interface ICommentService {
 
-    Comment findOne(Long id);
+    Comment findOne(String token, Long id);
 
     Page<CommentWithData> findAllForPost(String token, Long postId, int page);
 

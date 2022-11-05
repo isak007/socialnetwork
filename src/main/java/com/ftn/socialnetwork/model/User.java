@@ -63,11 +63,20 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Comment> comments;
 
-    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
-    private List<FriendRequest> sentFriendRequests;
+//    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
+//    private List<FriendRequest> sentFriendRequests;
+//
+//    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
+//    private List<FriendRequest> receivedFriendRequests;
 
-    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
-    private List<FriendRequest> receivedFriendRequests;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ChatLine> chatLines;
+
+//    @OneToMany(mappedBy = "user1", cascade = CascadeType.ALL)
+//    private List<Chat> user1chats;
+//
+//    @OneToMany(mappedBy = "user2", cascade = CascadeType.ALL)
+//    private List<Chat> user2chats;
 
     public User() {
         authorities.add(new SimpleGrantedAuthority("USER"));

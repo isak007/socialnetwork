@@ -4,7 +4,7 @@ import com.ftn.socialnetwork.model.FriendRequest;
 import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.FriendRequestDTO;
 import com.ftn.socialnetwork.model.dto.FriendRequestsDTO;
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface IFriendRequestService {
 
@@ -16,7 +16,7 @@ public interface IFriendRequestService {
 
     FriendRequestsDTO findAllNonPendingForUser(String token, int page);
 
-    List<User> findFriendsForUser(String token, Long userId, int page);
+    Page<User> findFriendsForUser(String token, Long userId, int page);
 
     FriendRequest save(String token, FriendRequestDTO friendRequestDTO);
 

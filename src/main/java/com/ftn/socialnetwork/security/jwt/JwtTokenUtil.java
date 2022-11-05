@@ -22,8 +22,11 @@ public class JwtTokenUtil {
     private String jwtSecret;
 
     //Duration of JWT token validation
-    @Value("60000000")
+    @Value("60000000") // around 16h 30min
     private Long jwtExpirationMs;
+
+    @Value("300000") // 5mins
+    private Long passwordResetJwtExpirationMs;
 
     // Signature algorithm for signing JWT
     private SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS512;
@@ -39,6 +42,18 @@ public class JwtTokenUtil {
                 .claim("authorities", user.getAuthorities())
                 .claim("userId",user.getId())
                 // userId is optional
+                .signWith(SIGNATURE_ALGORITHM, jwtSecret)
+                .compact();
+    }
+
+    public String generatePasswordResetToken(String email, String resetCode) {
+        return Jwts.builder()
+                //.setSubject(email)
+                .setIssuer("snDOO")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + passwordResetJwtExpirationMs))
+                .claim("email", email)
+                .claim("resetCode", resetCode)
                 .signWith(SIGNATURE_ALGORITHM, jwtSecret)
                 .compact();
     }
@@ -59,6 +74,15 @@ public class JwtTokenUtil {
                 .getBody();
 
         return claims.getSubject();
+    }
+
+    public String getPasswordResetAttributes(String token, String attribute) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get(attribute,String.class);
     }
 
     public Long getUserId(String token) {

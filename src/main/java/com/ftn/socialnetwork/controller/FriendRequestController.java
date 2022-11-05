@@ -1,19 +1,20 @@
 package com.ftn.socialnetwork.controller;
 
 import com.ftn.socialnetwork.model.FriendRequest;
+import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.FriendRequestDTO;
 import com.ftn.socialnetwork.model.dto.FriendRequestsDTO;
-import com.ftn.socialnetwork.model.dto.UserDTO;
+import com.ftn.socialnetwork.model.dto.FriendsDTO;
 import com.ftn.socialnetwork.service.implementation.FriendRequestService;
 import com.ftn.socialnetwork.util.mapper.FriendRequestMapper;
 import com.ftn.socialnetwork.util.mapper.UserMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.websocket.server.PathParam;
-import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -63,15 +64,26 @@ public class FriendRequestController {
     }
 
     @GetMapping(value="friends/{userId}")
-    public ResponseEntity<List<UserDTO>> findFriendsForUser(HttpServletRequest request,
+    public ResponseEntity<FriendsDTO> findFriendsForUser(HttpServletRequest request,
                                                             @PathParam(value = "page") Integer page,
                                                             @PathVariable Long userId) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
-        return new ResponseEntity<List<UserDTO>>(
-                friendRequestService.findFriendsForUser(token,userId, page).stream().map(userMapper::toDto).collect(Collectors.toList()),
-                HttpStatus.OK);
+        FriendsDTO friendsDTO = new FriendsDTO();
+        Page<User> friendsPage = friendRequestService.findFriendsForUser(token,userId, page);
+
+        // for testing purposes
+//        try {
+//            Thread.sleep(10 * 1000);
+//        } catch (InterruptedException ie) {
+//            Thread.currentThread().interrupt();
+//        }
+
+        friendsDTO.setTotalFriends((int)friendsPage.getTotalElements());
+        friendsDTO.setUsers(friendsPage.getContent().stream().map(userMapper::toDto).collect(Collectors.toList()));
+
+        return new ResponseEntity<FriendsDTO>(friendsDTO,HttpStatus.OK);
     }
 
     @PostMapping

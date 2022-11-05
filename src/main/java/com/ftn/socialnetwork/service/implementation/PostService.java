@@ -49,12 +49,19 @@ public class PostService implements IPostService {
 
 
     @Override
-    public Post findOne(Long id) {
-        Optional<Post> post = postRepository.findById(id);
-        if(post.isEmpty()) {
-            throw new NoSuchElementException("Post with id = " + id + " not found!");
+    public PostWithData findOne(String token, Long id) {
+        Long userId = jwtTokenUtil.getUserId(token);
+        Optional<Post> postOpt = postRepository.findById(id);
+        if(postOpt.isEmpty()) {
+            throw new EntityNotFoundException("Post with id = " + id + " not found!");
         }
-        return post.get();
+        Post post = postOpt.get();
+        // validate if user owns the post he's trying to view
+        if (!post.getUser().getId().equals(userId)){
+            if (post.getVisibility().equals("ME") || (post.getVisibility().equals("FRIENDS") && !userService.areFriends(userId,post.getUser().getId())))
+                throw new UnauthorizedException("You are not authorized for this action.");
+        }
+        return getPostsWithData(token,List.of(post)).get(0);
     }
 
     @Override

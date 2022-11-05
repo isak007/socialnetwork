@@ -4,6 +4,7 @@ import com.ftn.socialnetwork.util.RestService;
 import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.http.ResponseEntity;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -19,8 +20,9 @@ class CityValidator implements ConstraintValidator<City, String> {
     @Override
     public boolean isValid(String addressInput, ConstraintValidatorContext context) {
         String cityInput = addressInput.split(",")[0];
-        Object responseBody = restService.getCityList(cityInput);
-        if (responseBody == null) {return false;}
+        ResponseEntity<Object> response = restService.getCityList(cityInput);
+        if (response.getBody() == null) {return false;}
+        Object responseBody = response.getBody();
 
         Gson gson = new Gson();
         try {

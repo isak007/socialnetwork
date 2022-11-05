@@ -49,6 +49,14 @@ public class PostController {
 
     }
 
+    @GetMapping(value = "{id}")
+    public ResponseEntity<PostWithDataDTO> getUserData(HttpServletRequest request, @PathVariable Long id) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        return new ResponseEntity<PostWithDataDTO>(postWithDataMapper.toDto(postService.findOne(token,id)), HttpStatus.OK);
+    }
+
     @GetMapping(value = "user/{userId}")
     public ResponseEntity<PostsDTO> findAllForUser(HttpServletRequest request,
                                                                 @PathParam(value = "page") Integer page,
@@ -70,6 +78,8 @@ public class PostController {
     public ResponseEntity<PostWithDataDTO> createPost(HttpServletRequest request, @RequestBody PostDTO postDTO) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
+
+        System.out.println(postDTO.getPictureBase64());
 
         return new ResponseEntity<PostWithDataDTO>(postWithDataMapper.toDto(postService.save(token,postDTO)), HttpStatus.OK);
     }

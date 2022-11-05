@@ -1,10 +1,8 @@
 package com.ftn.socialnetwork.controller;
 
-import com.ftn.socialnetwork.model.dto.CreateEditUserDTO;
-import com.ftn.socialnetwork.model.dto.UserDTO;
-import com.ftn.socialnetwork.model.dto.JwtDTO;
-import com.ftn.socialnetwork.model.dto.LoginDTO;
+import com.ftn.socialnetwork.model.dto.*;
 import com.ftn.socialnetwork.service.IUserService;
+import com.ftn.socialnetwork.util.RestService;
 import com.ftn.socialnetwork.util.mapper.UserMapper;
 import com.ftn.socialnetwork.util.validators.OnCreate;
 import com.ftn.socialnetwork.util.validators.OnUpdate;
@@ -17,7 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import javax.websocket.server.PathParam;
 import java.io.*;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,10 +29,12 @@ public class UserController {
 
     private final IUserService userService;
     private final UserMapper userMapper;
+    private final RestService restService;
 
-    public UserController(IUserService userService, UserMapper userMapper) {
+    public UserController(IUserService userService, UserMapper userMapper, RestService restService) {
         this.userService = userService;
         this.userMapper = userMapper;
+        this.restService = restService;
     }
 
 
@@ -63,10 +65,27 @@ public class UserController {
     }
 
     @GetMapping(value = "send-email-verification-code")
-    public ResponseEntity<?> sendCode(HttpServletRequest request, @RequestParam("email") String email) {
+    public ResponseEntity<?> sendEmailVerificationCode(HttpServletRequest request, @RequestParam("email") String email) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
         userService.sendEmailVerificationCode(token, email);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping(value = "password-reset")
+    public ResponseEntity<?> passwordReset(@Valid @RequestBody PasswordResetDTO passwordResetDTO) {
+        return ResponseEntity.ok(userMapper.toDto(userService.passwordReset(passwordResetDTO)));
+    }
+
+    @GetMapping(value = "pre-password-reset-auth")
+    public ResponseEntity<?> prePasswordResetAuth(@RequestParam("jwt") String jwt) {
+        userService.prePasswordResetAuth(jwt);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping(value = "send-password-reset-code")
+    public ResponseEntity<?> sendPasswordResetCode(@RequestParam("email") String email) {
+        userService.sendPasswordResetCode(email);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -106,6 +125,28 @@ public class UserController {
         String token = header.substring(7);
 
         return new ResponseEntity<UserDTO>(userMapper.toDto(userService.getUserData(token,id)), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "places-token")
+    public ResponseEntity<PlacesTokenDTO> getPlacesToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        try {
+            String newToken = this.restService.renewValidationTokenWebClient();
+            return new ResponseEntity<PlacesTokenDTO>(new PlacesTokenDTO(newToken), HttpStatus.OK);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping(value = "city-list")
+    public ResponseEntity<Object> getCityList(HttpServletRequest request, @PathParam("queryString") String queryString) {
+        String header = request.getHeader("Authorization");
+        String token = header.substring(7);
+
+        return this.restService.getCityList(queryString);
+//            return new ResponseEntity<PlacesTokenDTO>(new PlacesTokenDTO(newToken), HttpStatus.OK);
     }
 
     @GetMapping(value = "fetch/username/{username}")

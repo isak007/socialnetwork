@@ -4,6 +4,7 @@ import com.ftn.socialnetwork.model.Post;
 import com.ftn.socialnetwork.model.User;
 import com.ftn.socialnetwork.model.dto.CreateEditUserDTO;
 import com.ftn.socialnetwork.model.dto.LoginDTO;
+import com.ftn.socialnetwork.model.dto.PasswordResetDTO;
 import com.ftn.socialnetwork.repository.FriendRequestRepository;
 import com.ftn.socialnetwork.repository.PostRepository;
 import com.ftn.socialnetwork.repository.UserRepository;
@@ -26,7 +27,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
@@ -186,6 +186,82 @@ public class UserService implements IUserService {
                 "Verification code: "+ verificationCode);
     }
 
+
+
+    @Override
+    public void prePasswordResetAuth(String jwt) {
+        if (!jwtTokenUtil.validate(jwt)){
+            throw new UnauthorizedException("Invalid token.");
+        }
+        String email = jwtTokenUtil.getPasswordResetAttributes(jwt,"email");
+        String resetCode = jwtTokenUtil.getPasswordResetAttributes(jwt,"resetCode");
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        // check if email exists
+        if (userOpt.isEmpty()){
+            throw new EntityNotFoundException(format("Email '%s' does not exist.",email));
+        }
+        User user = userOpt.get();
+
+        if (!bCryptPasswordEncoder.matches(user.getPassword() + email, resetCode)) {
+            throw new UnauthorizedException("Password reset code is incorrect.");
+        }
+    }
+    @Override
+    public User passwordReset(PasswordResetDTO passwordResetDTO) {
+
+        String jwt = passwordResetDTO.getPasswordResetJwt();
+
+        if (!jwtTokenUtil.validate(jwt)){
+            throw new UnauthorizedException("Invalid token.");
+        }
+
+        String email = jwtTokenUtil.getPasswordResetAttributes(jwt,"email");
+        String resetCode = jwtTokenUtil.getPasswordResetAttributes(jwt,"resetCode");
+        String newPassword = passwordResetDTO.getNewPassword();
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        // check if email exists
+        if (userOpt.isEmpty()){
+            throw new EntityNotFoundException(format("Email '%s' does not exist.",email));
+        }
+        User user = userOpt.get();
+
+        if (bCryptPasswordEncoder.matches(newPassword,user.getPassword())){
+            throw new UnauthorizedException("Password is the same as old one.");
+        }
+        if (!bCryptPasswordEncoder.matches(user.getPassword() + email, resetCode)){
+            throw new UnauthorizedException("Password reset code is incorrect.");
+        }
+        if (newPassword.length() < 6){
+            throw new UnauthorizedException("New password size is too small.");
+        }
+        String password = new BCryptPasswordEncoder().encode(newPassword);
+        user.setPassword(password);
+        return userRepository.save(user);
+
+    }
+
+    @Override
+    public void sendPasswordResetCode(String email){
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        // check if email exists
+        if (userOpt.isEmpty()){
+            throw new EntityNotFoundException(format("Email '%s' does not exist.",email));
+        }
+
+        User user = userOpt.get();
+        // creating verification token using user's encoded password and email
+        String secret = user.getPassword() + email;
+        String resetCode = bCryptPasswordEncoder.encode(secret);
+//        String verificationCode = BCrypt.hashpw(secret, BCrypt.gensalt(6));
+        String passwordResetCode = jwtTokenUtil.generatePasswordResetToken(email,resetCode);
+        emailService.sendMessage(email,
+                "Password Reset - Virtual Connect",
+                "Password reset link - http://localhost:8081/password-reset/"+passwordResetCode+
+                        "\nThis link will expire in 5 minutes.");
+    }
+
     @Override
     public void save(CreateEditUserDTO createEditUserDTO) {
 
@@ -223,7 +299,7 @@ public class UserService implements IUserService {
         loginDTO.setPassword(createEditUserDTO.getPassword());
         emailService.sendMessage(createEditUserDTO.getEmail(),
                 "Account confirmation - Virtual Connect",
-                "http://localhost:8081/account-confirmation/"+ login("account-token",loginDTO));
+                "Confirmation link - http://localhost:8081/account-confirmation/"+ login("account-token",loginDTO));
 
     }
 
@@ -289,19 +365,20 @@ public class UserService implements IUserService {
     public void uploadPicture(Long userId, String pictureName, String pictureBase64, String type){
         var parts = pictureBase64.split(",");
         var imageString = parts[1];
-
+        System.out.println(parts[0]);
         // create a buffered image
         BufferedImage image = null;
         byte[] imageByte;
 
         imageByte = Base64.getDecoder().decode(imageString);
         ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
-        try {
-            image = ImageIO.read(bis);
-            bis.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+//        try {
+//            image = ImageIO.read(bis);
+//            bis.close();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
         String path = "src/main/resources/user-photos/"+userId+"/"+type;
         File directory = new File(path);
@@ -310,19 +387,24 @@ public class UserService implements IUserService {
             // If it requires to make the entire directory path including parents,
             directory.mkdirs();
         }
-
         File outputfile = new File(path+"/"+pictureName);
 
-        System.out.println(outputfile.getAbsolutePath());
-
+        OutputStream os = null;
         try {
-            String[] pictureSplit = pictureName.split("\\.");
-            System.out.println(pictureSplit[pictureSplit.length-1]);
-            ImageIO.write(image, pictureSplit[pictureSplit.length-1], outputfile);
-        } catch (Exception e) {
-            System.out.println(e);
+            os = new FileOutputStream(outputfile);
+            os.write(imageByte);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+//        try {
+//            String[] pictureSplit = pictureName.split("\\.");
+//            System.out.println(pictureSplit[pictureSplit.length-1]);
+//            ImageIO.write(image, pictureSplit[pictureSplit.length-1], outputfile);
+//        } catch (Exception e) {
+//            System.out.println(e);
+//            throw new RuntimeException(e);
+//        }
     }
 
     @Override
@@ -337,6 +419,10 @@ public class UserService implements IUserService {
         InputStream fileIS = null;
         try {
             fileIS = new FileInputStream(file);
+//            final int BUFFERSIZE = 1024 * 1024 * 1024;
+//            byte[] buffer = new byte[BUFFERSIZE];
+//            System.out.println(Arrays.toString(fileIS.readAllBytes()));
+//            return fileIS.readAllBytes();
             return StreamUtils.copyToByteArray(fileIS);
 
         } catch (FileNotFoundException e) {
@@ -371,6 +457,7 @@ public class UserService implements IUserService {
         InputStream fileIS = null;
         try {
             fileIS = new FileInputStream(file);
+//            return fileIS.readAllBytes();
             return StreamUtils.copyToByteArray(fileIS);
 
         } catch (FileNotFoundException e) {
