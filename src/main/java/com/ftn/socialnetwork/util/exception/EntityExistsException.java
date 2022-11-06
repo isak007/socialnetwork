@@ -6,7 +6,4 @@ public class EntityExistsException extends RuntimeException {
         super(message);
     }
 
-    public EntityExistsException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

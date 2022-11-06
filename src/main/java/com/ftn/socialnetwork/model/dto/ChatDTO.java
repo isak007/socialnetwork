@@ -10,8 +10,6 @@ public class ChatDTO {
 
     private Long id;
 
-//    private List<ChatLineDTO> chatLinesDTO;
-
     @NotNull
     private Long user1Id;
 

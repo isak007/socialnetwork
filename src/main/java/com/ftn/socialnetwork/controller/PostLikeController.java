@@ -5,7 +5,6 @@ import com.ftn.socialnetwork.model.dto.LikesDTO;
 import com.ftn.socialnetwork.model.dto.PostLikeDTO;
 import com.ftn.socialnetwork.model.dto.UserDTO;
 import com.ftn.socialnetwork.service.IPostLikeService;
-import com.ftn.socialnetwork.util.mapper.PostLikeMapper;
 import com.ftn.socialnetwork.util.mapper.UserMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -16,19 +15,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.websocket.server.PathParam;
 import java.util.stream.Collectors;
 
-
 @RestController
 @RequestMapping(value = "post-likes")
 @CrossOrigin("http://localhost:8081/")
 public class PostLikeController {
 
     private final IPostLikeService postLikeService;
-    private final PostLikeMapper postLikeMapper;
     private final UserMapper userMapper;
 
-    public PostLikeController(IPostLikeService postLikeService, PostLikeMapper postLikeMapper, UserMapper userMapper) {
+    public PostLikeController(IPostLikeService postLikeService, UserMapper userMapper) {
         this.postLikeService = postLikeService;
-        this.postLikeMapper = postLikeMapper;
         this.userMapper = userMapper;
     }
 
@@ -39,12 +35,6 @@ public class PostLikeController {
                                                         @PathVariable Long postId){
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
-        // for testing purposes
-//        try {
-//            Thread.sleep(10 * 1000);
-//        } catch (InterruptedException ie) {
-//            Thread.currentThread().interrupt();
-//        }
 
         Page<User> postLikePage = postLikeService.findAllForPost(token, postId, page);
         LikesDTO likesDTO = new LikesDTO();

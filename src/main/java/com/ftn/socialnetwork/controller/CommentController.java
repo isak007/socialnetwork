@@ -49,7 +49,7 @@ public class CommentController {
     }
 
     @GetMapping(value = "{id}")
-    public ResponseEntity<CommentDTO> getUserData(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<CommentDTO> getComment(HttpServletRequest request, @PathVariable Long id) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 

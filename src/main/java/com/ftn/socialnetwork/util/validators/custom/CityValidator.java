@@ -27,7 +27,6 @@ class CityValidator implements ConstraintValidator<City, String> {
         Gson gson = new Gson();
         try {
             String responseBodyString = gson.toJson(responseBody);
-            System.out.println(responseBodyString);
             responseBodyString = responseBodyString.substring(11);
             responseBodyString = responseBodyString.split("}", 2)[0];
             responseBodyString = responseBodyString.split("\\{", 2)[1];

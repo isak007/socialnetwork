@@ -87,9 +87,8 @@ public class CommentLikeService implements ICommentLikeService {
         Pageable pageable = PageRequest.of(page,this.usersPerPage);
         final int start = (int)pageable.getOffset();
         final int end = Math.min((start + pageable.getPageSize()), users.size());
-        final Page<User> usersPage = new PageImpl<>(users.subList(start, end), pageable, users.size());
 
-        return usersPage;
+        return new PageImpl<>(users.subList(start, end), pageable, users.size());
     }
 
     @Override

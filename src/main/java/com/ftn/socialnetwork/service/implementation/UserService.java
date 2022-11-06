@@ -115,13 +115,6 @@ public class UserService implements IUserService {
 
     @Override
     public User getUserData(String token, Long id) {
-        // if user is not checking his own data, validate if he's a friend of a user
-        // whose data he's trying to access
-//        if (!jwtTokenUtil.getUserId(token).equals(id) &&
-//                !this.areFriends(jwtTokenUtil.getUserId(token), id)) {
-//            throw new UnauthorizedException("You are not authorized for this action.");
-//        }
-
         Optional<User> user  = userRepository.findById(id);
         if (user.isEmpty()){
             throw new EntityNotFoundException(format("User with id '%s' not found.",id));
@@ -137,15 +130,6 @@ public class UserService implements IUserService {
         if (user.isEmpty()){
             throw new EntityNotFoundException(format("User with username '%s' not found.",username));
         }
-
-        // if user is not checking his own data, validate if he's a friend of a user
-        // whose data he's trying to access
-//        Long sessionUserId = jwtTokenUtil.getUserId(token);
-//        if (!sessionUserId.equals(user.get().getId()) &&
-//                !this.areFriends(sessionUserId, user.get().getId())) {
-//            throw new UnauthorizedException("You are not authorized for this action.");
-//        }
-
         return user.get();
     }
 
@@ -179,7 +163,6 @@ public class UserService implements IUserService {
         // creating verification token using user's encoded password and email
         String secret = user.getPassword().substring(7,20) + email;
         String verificationCode = bCryptPasswordEncoder.encode(secret);
-//        String verificationCode = BCrypt.hashpw(secret, BCrypt.gensalt(6));
 
         emailService.sendMessage(email,
                 "New email verification - Virtual Connect",
@@ -254,7 +237,6 @@ public class UserService implements IUserService {
         // creating verification token using user's encoded password and email
         String secret = user.getPassword() + email;
         String resetCode = bCryptPasswordEncoder.encode(secret);
-//        String verificationCode = BCrypt.hashpw(secret, BCrypt.gensalt(6));
         String passwordResetCode = jwtTokenUtil.generatePasswordResetToken(email,resetCode);
         emailService.sendMessage(email,
                 "Password Reset - Virtual Connect",
@@ -310,18 +292,15 @@ public class UserService implements IUserService {
             throw new EntityNotFoundException(format("User with id '%s' not found.",userDTO.getId()));
         }
         User user = userOpt.get();
-
         // if user didn't enter the password for approval of changes
         // or the password is wrong then return unauthorized
         if (userDTO.getPassword() == null || userDTO.getPassword().equals("") || !BCrypt.checkpw(userDTO.getPassword(), user.getPassword())){
             throw new UnauthorizedException("The current password is incorrect.");
         }
-
         // check if username is taken
         if (!user.getUsername().equals(userDTO.getUsername()) && userRepository.findByUsername(userDTO.getUsername()).isPresent()){
             throw new UsernameExistsException(format("Username '%s' is already in use.",userDTO.getUsername()));
         }
-
         // check if email is taken (shouldn't happen as user will have to confirm his email)
         if (!user.getEmail().equals(userDTO.getEmail()) && userRepository.findByEmail(userDTO.getEmail()).isPresent()){
             throw new EmailExistsException(format("Email '%s' is already in use.",userDTO.getEmail()));
@@ -345,8 +324,6 @@ public class UserService implements IUserService {
         // if user also wants to change a password
         if (userDTO.getNewPassword() != null && !userDTO.getNewPassword().equals("")) {
             String newPassword = new BCryptPasswordEncoder().encode(userDTO.getNewPassword());
-            System.out.println("New raw password: "+ userDTO.getNewPassword());
-            System.out.println("New encoded password: "+ newPassword);
             user.setPassword(newPassword);
         }
 
@@ -354,7 +331,6 @@ public class UserService implements IUserService {
             user.setProfilePicture(null);
         }
         else if(userDTO.getProfilePicture() != null && !userDTO.getProfilePicture().equals("") && userDTO.getPictureBase64() != null) {
-            //userDTO.setProfilePicture(userDTO.getProfilePicture().replace(" ",""));
             user.setProfilePicture(userDTO.getProfilePicture());
             this.uploadPicture(jwtTokenUtil.getUserId(token), userDTO.getProfilePicture(), userDTO.getPictureBase64(),this.PROFILE_TYPE);
         }
@@ -365,7 +341,6 @@ public class UserService implements IUserService {
     public void uploadPicture(Long userId, String pictureName, String pictureBase64, String type){
         var parts = pictureBase64.split(",");
         var imageString = parts[1];
-        System.out.println(parts[0]);
         // create a buffered image
         BufferedImage image = null;
         byte[] imageByte;
@@ -373,17 +348,9 @@ public class UserService implements IUserService {
         imageByte = Base64.getDecoder().decode(imageString);
         ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
 
-//        try {
-//            image = ImageIO.read(bis);
-//            bis.close();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-
         String path = "src/main/resources/user-photos/"+userId+"/"+type;
         File directory = new File(path);
         if (! directory.exists()){
-            //directory.mkdir();
             // If it requires to make the entire directory path including parents,
             directory.mkdirs();
         }
@@ -397,14 +364,6 @@ public class UserService implements IUserService {
             throw new RuntimeException(e);
         }
 
-//        try {
-//            String[] pictureSplit = pictureName.split("\\.");
-//            System.out.println(pictureSplit[pictureSplit.length-1]);
-//            ImageIO.write(image, pictureSplit[pictureSplit.length-1], outputfile);
-//        } catch (Exception e) {
-//            System.out.println(e);
-//            throw new RuntimeException(e);
-//        }
     }
 
     @Override
@@ -419,10 +378,6 @@ public class UserService implements IUserService {
         InputStream fileIS = null;
         try {
             fileIS = new FileInputStream(file);
-//            final int BUFFERSIZE = 1024 * 1024 * 1024;
-//            byte[] buffer = new byte[BUFFERSIZE];
-//            System.out.println(Arrays.toString(fileIS.readAllBytes()));
-//            return fileIS.readAllBytes();
             return StreamUtils.copyToByteArray(fileIS);
 
         } catch (FileNotFoundException e) {
@@ -457,7 +412,6 @@ public class UserService implements IUserService {
         InputStream fileIS = null;
         try {
             fileIS = new FileInputStream(file);
-//            return fileIS.readAllBytes();
             return StreamUtils.copyToByteArray(fileIS);
 
         } catch (FileNotFoundException e) {

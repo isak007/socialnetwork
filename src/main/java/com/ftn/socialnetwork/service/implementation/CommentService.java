@@ -162,7 +162,6 @@ public class CommentService implements ICommentService {
         CommentWithData commentWithData = new CommentWithData();
         commentWithData.setComment(commentReturned);
         commentWithData.setCommentLikes(commentLikeService.findAllForComment(token, commentReturned.getId(),0).getContent());
-//        commentWithData.setLiked(commentLikeService.userLikedComment(userId, commentReturned.getId()));
         return commentWithData;
     }
 

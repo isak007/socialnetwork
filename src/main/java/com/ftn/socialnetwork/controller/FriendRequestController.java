@@ -73,13 +73,6 @@ public class FriendRequestController {
         FriendsDTO friendsDTO = new FriendsDTO();
         Page<User> friendsPage = friendRequestService.findFriendsForUser(token,userId, page);
 
-        // for testing purposes
-//        try {
-//            Thread.sleep(10 * 1000);
-//        } catch (InterruptedException ie) {
-//            Thread.currentThread().interrupt();
-//        }
-
         friendsDTO.setTotalFriends((int)friendsPage.getTotalElements());
         friendsDTO.setUsers(friendsPage.getContent().stream().map(userMapper::toDto).collect(Collectors.toList()));
 

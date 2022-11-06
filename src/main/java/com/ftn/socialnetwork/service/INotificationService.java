@@ -6,8 +6,6 @@ import org.springframework.data.domain.Page;
 
 public interface INotificationService {
 
-//    Chat findOne(Long id);
-
     Notification findBySenderIdAndReceiverIdAndObjectId(String token, Long senderId, Long receiverId, Long objectId);
 
     Page<Notification> findAllForUser(String token, int page);
@@ -16,5 +14,4 @@ public interface INotificationService {
 
     Notification update(String token, NotificationDTO notificationDTO);
 
-//    void delete(String token, Long id);
 }

@@ -5,7 +5,6 @@ import com.ftn.socialnetwork.model.dto.CommentLikeDTO;
 import com.ftn.socialnetwork.model.dto.LikesDTO;
 import com.ftn.socialnetwork.model.dto.UserDTO;
 import com.ftn.socialnetwork.service.ICommentLikeService;
-import com.ftn.socialnetwork.util.mapper.CommentLikeMapper;
 import com.ftn.socialnetwork.util.mapper.UserMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -23,12 +22,10 @@ import java.util.stream.Collectors;
 public class CommentLikeController {
 
     private final ICommentLikeService commentLikeService;
-    private final CommentLikeMapper commentLikeMapper;
     private final UserMapper userMapper;
 
-    public CommentLikeController(ICommentLikeService commentLikeService, CommentLikeMapper commentLikeMapper, UserMapper userMapper) {
+    public CommentLikeController(ICommentLikeService commentLikeService, UserMapper userMapper) {
         this.commentLikeService = commentLikeService;
-        this.commentLikeMapper = commentLikeMapper;
         this.userMapper = userMapper;
     }
 

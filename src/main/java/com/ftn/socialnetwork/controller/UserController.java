@@ -17,7 +17,6 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.websocket.server.PathParam;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,12 +41,6 @@ public class UserController {
     public ResponseEntity<List<UserDTO>> findUsers(@PathVariable String searchTerm,
                                                    @RequestParam("page") Integer page ,
                                                    @RequestParam("itemsPerPage") Integer itemsPerPage) {
-        // for testing purposes
-//        try {
-//            Thread.sleep(10 * 1000);
-//        } catch (InterruptedException ie) {
-//            Thread.currentThread().interrupt();
-//        }
         return new ResponseEntity<List<UserDTO>>(userService.findUsers(searchTerm,page,itemsPerPage).stream().map(userMapper::toDto).collect(Collectors.toList()), HttpStatus.OK);
     }
 
@@ -127,26 +120,9 @@ public class UserController {
         return new ResponseEntity<UserDTO>(userMapper.toDto(userService.getUserData(token,id)), HttpStatus.OK);
     }
 
-    @GetMapping(value = "places-token")
-    public ResponseEntity<PlacesTokenDTO> getPlacesToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        String token = header.substring(7);
-
-        try {
-            String newToken = this.restService.renewValidationTokenWebClient();
-            return new ResponseEntity<PlacesTokenDTO>(new PlacesTokenDTO(newToken), HttpStatus.OK);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @GetMapping(value = "city-list")
-    public ResponseEntity<Object> getCityList(HttpServletRequest request, @PathParam("queryString") String queryString) {
-        String header = request.getHeader("Authorization");
-        String token = header.substring(7);
-
+    public ResponseEntity<Object> getCityList(@PathParam("queryString") String queryString) {
         return this.restService.getCityList(queryString);
-//            return new ResponseEntity<PlacesTokenDTO>(new PlacesTokenDTO(newToken), HttpStatus.OK);
     }
 
     @GetMapping(value = "fetch/username/{username}")

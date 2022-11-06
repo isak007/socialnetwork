@@ -126,13 +126,6 @@ public class FriendRequestService implements IFriendRequestService {
 
     @Override
     public Page<User> findFriendsForUser(String token, Long userId, int page) {
-        Long sessionUserId = jwtTokenUtil.getUserId(token);
-        // if user is trying to view some other user's friends list
-        // that he's not a friend of
-//        if (!sessionUserId.equals(userId) && !userService.areFriends(sessionUserId,userId)){
-//            throw new UnauthorizedException("You are not authorized for this action.");
-//        }
-
         List<User> friends = new ArrayList<>();
         List<FriendRequest> sentAcceptedRequests = friendRequestRepository.findBySenderIdAndRequestStatus(userId,"ACCEPTED");
         List<FriendRequest> receivedAcceptedRequests = friendRequestRepository.findByReceiverIdAndRequestStatus(userId,"ACCEPTED");
@@ -158,10 +151,6 @@ public class FriendRequestService implements IFriendRequestService {
         if (!friendRequestDTO.getSenderId().equals(userId) || friendRequestDTO.getReceiverId().equals(userId)) {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
-//        Optional<FriendRequest> pendingFriendRequestOpt =
-//                friendRequestRepository.findBySenderIdAndReceiverIdAndRequestStatus(friendRequestDTO.getSenderId(),friendRequestDTO.getReceiverId(),"PENDING");
-//        Optional<FriendRequest> acceptedFriendRequestOpt =
-//                friendRequestRepository.findBySenderIdAndReceiverIdAndRequestStatus(friendRequestDTO.getSenderId(),friendRequestDTO.getReceiverId(),"ACCEPTED");
 
         // if friend request exists for 2 users that is still pending or is already accepted
         // forbid sending new one
@@ -218,13 +207,6 @@ public class FriendRequestService implements IFriendRequestService {
         if (friendRequestOpt.isEmpty()){
             throw new EntityNotFoundException(format("Friend request with id '%s' not found.",id));
         }
-
-        FriendRequest friendRequest = friendRequestOpt.get();
-        Long userId = jwtTokenUtil.getUserId(token);
-        // not needed since user can remove friends thus doesn't have to be the receiver
-//        if (!friendRequest.getReceiver().getId().equals(userId)){
-//            throw new UnauthorizedException("You are not authorized for this action.");
-//        }
 
         friendRequestRepository.deleteById(id);
     }

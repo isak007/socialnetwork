@@ -75,14 +75,4 @@ public class NotificationController {
         return new ResponseEntity<NotificationDTO>(notificationMapper.toDto(notificationService.update(token, notificationDTO)), HttpStatus.OK);
     }
 
-//
-//    @DeleteMapping(value = "{id}")
-//    public ResponseEntity<Void> deleteChat(HttpServletRequest request, @PathVariable(value = "id") Long id){
-//        String header = request.getHeader("Authorization");
-//        String token = header.substring(7);
-//
-//        chatService.delete(token, id);
-//
-//        return new ResponseEntity<>(HttpStatus.OK);
-//    }
 }

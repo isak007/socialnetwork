@@ -8,7 +8,6 @@ import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.IPostService;
 import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
 import com.ftn.socialnetwork.util.exception.UnauthorizedException;
-import com.ftn.socialnetwork.util.mapper.UserMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,26 +23,21 @@ import static java.lang.String.format;
 public class PostService implements IPostService {
 
     private final PostLikeService postLikeService;
-    private final CommentService commentService;
     private final PostRepository postRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final JwtTokenUtil jwtTokenUtil;
-    private final UserMapper userMapper;
     private final UserService userService;
-    private final String PROFILE_TYPE = "profile";
     private final String POST_TYPE = "post";
     private final int postsPerPage = 3;
 
 
-    public PostService(PostLikeService postLikeService, CommentService commentService, PostRepository postRepository,
+    public PostService(PostLikeService postLikeService, PostRepository postRepository,
                        FriendRequestRepository friendRequestRepository, JwtTokenUtil jwtTokenUtil,
-                       UserMapper userMapper, UserService userService) {
+                       UserService userService) {
         this.postLikeService = postLikeService;
-        this.commentService = commentService;
         this.postRepository = postRepository;
         this.friendRequestRepository = friendRequestRepository;
         this.jwtTokenUtil = jwtTokenUtil;
-        this.userMapper = userMapper;
         this.userService = userService;
     }
 
@@ -80,15 +74,6 @@ public class PostService implements IPostService {
             final int start = (int)pageable.getOffset();
             final int end = Math.min((start + pageable.getPageSize()), postsWithData.size());
             return new PageImpl<>(postsWithData.subList(start, end), pageable, postsWithData.size());
-
-
-//            LocalDateTime from = LocalDateTime.now();
-//            LocalDateTime to = LocalDateTime.now().minusMinutes(5);
-//
-//            Duration duration = Duration.between(from, to);
-//            System.out.println(duration.getSeconds());
-
-//            return postsWithDataPage;
         }
 
         // else
@@ -201,7 +186,6 @@ public class PostService implements IPostService {
         PostWithData postWithData = new PostWithData();
         postWithData.setPost(postReturned);
         postWithData.setPostLikes(postLikeService.findAllForPost(token, postReturned.getId(),0).getContent());
-        //postWithData.setLiked(postLikeService.userLikedPost(userId, postReturned.getId()));
         return postWithData;
     }
 
@@ -218,7 +202,6 @@ public class PostService implements IPostService {
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-//        post.setPicture(postDTO.getPicture());
         post.setText(postDTO.getText());
         post.setVisibility(postDTO.getVisibility());
         post.setEdited(true);

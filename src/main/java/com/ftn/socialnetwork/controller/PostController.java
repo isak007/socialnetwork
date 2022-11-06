@@ -50,7 +50,7 @@ public class PostController {
     }
 
     @GetMapping(value = "{id}")
-    public ResponseEntity<PostWithDataDTO> getUserData(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<PostWithDataDTO> getPost(HttpServletRequest request, @PathVariable Long id) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 

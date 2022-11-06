@@ -1,7 +1,6 @@
 package com.ftn.socialnetwork.util.mail;
 
 import com.ftn.socialnetwork.util.exception.InvalidEmailException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,8 +13,11 @@ public class EmailService implements IEmailService{
 
     private static final String FROM = "virtualconnect6500@outlook.com";
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+
+    public EmailService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     @Override
     public void sendMessage(String to, String subject, String text) {

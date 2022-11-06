@@ -64,14 +64,4 @@ public class ChatLineController {
         return new ResponseEntity<ChatLineDTO>(chatLineMapper.toDto(chatLineService.save(token,chatLineDTO)), HttpStatus.OK);
     }
 
-
-//    @DeleteMapping(value = "{id}")
-//    public ResponseEntity<Void> deleteChatLine(HttpServletRequest request, @PathVariable(value = "id") Long id){
-//        String header = request.getHeader("Authorization");
-//        String token = header.substring(7);
-//
-//        chatLineService.delete(token, id);
-//
-//        return new ResponseEntity<>(HttpStatus.OK);
-//    }
 }

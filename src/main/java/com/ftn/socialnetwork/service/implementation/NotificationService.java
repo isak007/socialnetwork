@@ -167,22 +167,4 @@ public class NotificationService implements INotificationService {
         return notificationRepository.save(notification);
     }
 
-
-
-//    @Override
-//    public void delete(String token, Long id) {
-//        Long userId = jwtTokenUtil.getUserId(token);
-//
-//        Optional<Chat> chatOpt = chatRepository.findById(id);
-//        if (chatOpt.isEmpty()){
-//            throw new EntityNotFoundException("The chat you are trying to delete does not exist.");
-//        }
-//
-//        Chat chat = chatOpt.get();
-//        // validate if user is participant in the chat he is trying to delete
-//        if (!chat.getUser1().getId().equals(userId) && !chat.getUser2().getId().equals(userId)){
-//            throw new UnauthorizedException("You are not authorized for this action.");
-//        }
-//        chatRepository.deleteById(id);
-//    }
 }

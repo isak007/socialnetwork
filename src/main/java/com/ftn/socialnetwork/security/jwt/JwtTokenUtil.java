@@ -86,31 +86,20 @@ public class JwtTokenUtil {
     }
 
     public Long getUserId(String token) {
-        //------------ Decode JWT ------------
         String[] split_string = token.split("\\.");
         String base64EncodedBody = split_string[1];
-
-        //~~~~~~~~~ JWT Header ~~~~~~~
         Base64 base64Url = new Base64(true);
-
-        System.out.println("~~~~~~~~~ JWT Body ~~~~~~~");
         String body = new String(base64Url.decode(base64EncodedBody));
-        System.out.println("JWT Body : "+body);
-
-
-        body = body.substring(1, body.length()-1);                //remove curly brackets
+        body = body.substring(1, body.length()-1);
         LinkedList<String> myList = new LinkedList<String>(Arrays.asList(body.split(",")));
         String userId = null;
-        for(String pair : myList)                          //iterate over the pairs
+        for(String pair : myList)
         {
             if (pair.contains("userId")){
                 userId = pair.split(":")[1];
-                //userId = userId.substring(1, userId.length()-1);
                 break;
             }
         }
-
-        System.out.println("Returned user id: "+userId);
         return userId != null ? Long.valueOf(userId) : null;
     }
 

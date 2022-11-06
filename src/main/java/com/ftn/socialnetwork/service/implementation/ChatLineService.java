@@ -58,17 +58,11 @@ public class ChatLineService implements IChatLineService {
 
         chatLines.sort(Comparator.comparing(cl -> LocalDateTime.parse(cl.getDateCreated(), formatter)));
         Collections.reverse(chatLines);
-//        for (ChatLine chatLine : chatLines){
-//            System.out.println(chatLine.getDateCreated());
-//        }
 
         Pageable pageable = PageRequest.of(page,this.chatLinesPerPage);
         final int start = (int)pageable.getOffset();
         final int end = Math.min((start + pageable.getPageSize()), chatLines.size());
-        // removing excess elements
         chatLines = chatLines.subList(start, end);
-        // reverting order so that it lists properly on frontend
-        //Collections.reverse(chatLines);
         return new PageImpl<>(chatLines, pageable, totalChatLines);
     }
 
@@ -120,21 +114,4 @@ public class ChatLineService implements IChatLineService {
         return chatLineReturned;
     }
 
-
-//    @Override
-//    public void delete(String token, Long id) {
-//        Long userId = jwtTokenUtil.getUserId(token);
-//
-//        Optional<Chat> chatOpt = chatRepository.findById(id);
-//        if (chatOpt.isEmpty()){
-//            throw new EntityNotFoundException("The chat you are trying to delete does not exist.");
-//        }
-//
-//        Chat chat = chatOpt.get();
-//        // validate if user is participant in the chat he is trying to delete
-//        if (!chat.getUser1().getId().equals(userId) && !chat.getUser2().getId().equals(userId)){
-//            throw new UnauthorizedException("You are not authorized for this action.");
-//        }
-//        chatRepository.deleteById(id);
-//    }
 }
