@@ -50,12 +50,14 @@ public class NotificationController {
     public ResponseEntity<NotificationDTO> findForLastChatLine(HttpServletRequest request,
                                                                @PathParam(value = "senderId") Long senderId,
                                                                @PathParam(value = "receiverId") Long receiverId,
-                                                               @PathParam(value = "objectId") Long objectId) {
+                                                               @PathParam(value = "objectId") Long objectId,
+                                                               @PathParam(value = "activityType") String activityType) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
 
         return new ResponseEntity<NotificationDTO>(
-                notificationMapper.toDto(notificationService.findBySenderIdAndReceiverIdAndObjectId(token,senderId,receiverId,objectId)),HttpStatus.OK);
+                notificationMapper.toDto(
+                        notificationService.findBySenderIdAndReceiverIdAndObjectIdAndActivityType(token,senderId,receiverId,objectId,activityType)),HttpStatus.OK);
     }
 
     @Validated(OnCreate.class)

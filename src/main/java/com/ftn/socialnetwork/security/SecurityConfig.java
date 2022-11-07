@@ -86,6 +86,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/users/password-reset").permitAll()
                 .antMatchers("/users/send-password-reset-code").permitAll()
                 .antMatchers("/users/pre-password-reset-auth").permitAll()
+                .antMatchers("/users/city-list").permitAll()
                 .anyRequest().authenticated();
 
         // Add JWT token filter

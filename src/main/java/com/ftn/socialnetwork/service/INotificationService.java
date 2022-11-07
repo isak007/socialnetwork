@@ -6,7 +6,8 @@ import org.springframework.data.domain.Page;
 
 public interface INotificationService {
 
-    Notification findBySenderIdAndReceiverIdAndObjectId(String token, Long senderId, Long receiverId, Long objectId);
+    Notification findBySenderIdAndReceiverIdAndObjectIdAndActivityType(String token, Long senderId, Long receiverId,
+                                                                       Long objectId, String activityType);
 
     Page<Notification> findAllForUser(String token, int page);
 

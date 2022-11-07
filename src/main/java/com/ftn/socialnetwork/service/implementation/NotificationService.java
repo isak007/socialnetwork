@@ -24,7 +24,7 @@ public class NotificationService implements INotificationService {
     private final NotificationRepository notificationRepository;
     final int notifications_per_page = 10;
     final List<String> objectTypes = Arrays.asList("POST","COMMENT","MESSAGE","FRIEND_REQUEST");
-    final List<String> activityTypes = Arrays.asList("Liked post","Liked comment","Commented on a post","Sent friend request","Sent message");
+    final List<String> activityTypes = Arrays.asList("Liked post","Liked comment","Commented on a post","Sent friend request","Sent message","Accepted friend request");
 
     private final UserService userService;
     private final PostRepository postRepository;
@@ -48,14 +48,17 @@ public class NotificationService implements INotificationService {
     }
 
     @Override
-    public Notification findBySenderIdAndReceiverIdAndObjectId(String token, Long senderId, Long receiverId, Long objectId) {
+    public Notification findBySenderIdAndReceiverIdAndObjectIdAndActivityType(String token, Long senderId,
+                                                                              Long receiverId, Long objectId,
+                                                                              String activityType) {
         Long userId = jwtTokenUtil.getUserId(token);
 
         if (!senderId.equals(userId) && !receiverId.equals(userId)){
             throw new UnauthorizedException("You are not authorized for this action.");
         }
 
-        Notification notification = notificationRepository.findBySenderIdAndReceiverIdAndObjectId(senderId,receiverId,objectId);
+        Notification notification =
+                notificationRepository.findBySenderIdAndReceiverIdAndObjectIdAndActivityType(senderId,receiverId,objectId,activityType);
 
         if (notification == null){
             throw new EntityNotFoundException("Notification not found.");

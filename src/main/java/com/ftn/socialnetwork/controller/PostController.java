@@ -78,9 +78,6 @@ public class PostController {
     public ResponseEntity<PostWithDataDTO> createPost(HttpServletRequest request, @RequestBody PostDTO postDTO) {
         String header = request.getHeader("Authorization");
         String token = header.substring(7);
-
-        System.out.println(postDTO.getPictureBase64());
-
         return new ResponseEntity<PostWithDataDTO>(postWithDataMapper.toDto(postService.save(token,postDTO)), HttpStatus.OK);
     }
 

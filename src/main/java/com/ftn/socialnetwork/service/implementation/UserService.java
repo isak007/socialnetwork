@@ -10,10 +10,7 @@ import com.ftn.socialnetwork.repository.PostRepository;
 import com.ftn.socialnetwork.repository.UserRepository;
 import com.ftn.socialnetwork.security.jwt.JwtTokenUtil;
 import com.ftn.socialnetwork.service.IUserService;
-import com.ftn.socialnetwork.util.exception.EmailExistsException;
-import com.ftn.socialnetwork.util.exception.EntityNotFoundException;
-import com.ftn.socialnetwork.util.exception.UnauthorizedException;
-import com.ftn.socialnetwork.util.exception.UsernameExistsException;
+import com.ftn.socialnetwork.util.exception.*;
 import com.ftn.socialnetwork.util.mail.EmailService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -279,9 +276,14 @@ public class UserService implements IUserService {
         LoginDTO loginDTO = new LoginDTO();
         loginDTO.setUsername(createEditUserDTO.getUsername());
         loginDTO.setPassword(createEditUserDTO.getPassword());
-        emailService.sendMessage(createEditUserDTO.getEmail(),
-                "Account confirmation - Virtual Connect",
-                "Confirmation link - http://localhost:8081/account-confirmation/"+ login("account-token",loginDTO));
+        try {
+            emailService.sendMessage(createEditUserDTO.getEmail(),
+                    "Account confirmation - Virtual Connect",
+                    "Confirmation link - http://localhost:8081/account-confirmation/" + login("account-token", loginDTO));
+        } catch (InvalidEmailException e){
+            userRepository.delete(userReturned);
+            throw new InvalidEmailException(e.getMessage());
+        }
 
     }
 

@@ -163,6 +163,9 @@ public class FriendRequestService implements IFriendRequestService {
 
         User sender = userService.findOne(friendRequestDTO.getSenderId());
         User receiver = userService.findOne(friendRequestDTO.getReceiverId());
+        if (receiver == null){
+            throw new EntityNotFoundException("The receiver does not exist.");
+        }
         friendRequest.setSender(sender);
         friendRequest.setReceiver(receiver);
         friendRequest.setDateCreated(LocalDateTime.now().toString().substring(0,23).replace("T"," "));
@@ -189,16 +192,41 @@ public class FriendRequestService implements IFriendRequestService {
         if (friendRequestDTO.getSenderId().equals(userId) || !friendRequestDTO.getReceiverId().equals(userId) || friendRequestDTO.getRequestStatus().equals("PENDING")){
             throw new UnauthorizedException("You are not authorized for this action.");
         }
+        if (!friendRequestDTO.getRequestStatus().equals("ACCEPTED")){
+            throw new UnauthorizedException("You are not authorized for this action.");
+        }
+
+        User sender = userService.findOne(userId);
+
+        User receiver = userService.findOne(friendRequestDTO.getSenderId());
+        if (receiver == null){
+            throw new EntityNotFoundException("The receiver for notification does not exist.");
+        }
 
         Optional<FriendRequest> friendRequestOpt = friendRequestRepository.findBySenderIdAndReceiverIdAndRequestStatus(friendRequestDTO.getSenderId(),friendRequestDTO.getReceiverId(),"PENDING");
         if (friendRequestOpt.isEmpty()){
             throw new EntityNotFoundException(format("Friend request with id '%s' not found.",friendRequestDTO.getId()));
         }
+        if (userService.areFriends(sender.getId(),receiver.getId())){
+            throw new EntityExistsException("Two users are already friends.");
+        }
 
         FriendRequest friendRequest = friendRequestOpt.get();
         friendRequest.setRequestStatus(friendRequestDTO.getRequestStatus());
+        FriendRequest friendRequestReturned = friendRequestRepository.save(friendRequest);
 
-        return friendRequestRepository.save(friendRequest);
+        // create notification
+        Notification notification = new Notification();
+        notification.setSender(sender);
+        notification.setReceiver(receiver);
+        notification.setObjectType("FRIEND_REQUEST");
+        notification.setObjectId(friendRequestReturned.getId());
+        notification.setActivityType("Accepted friend request");
+        notification.setDateCreated(LocalDateTime.now().toString().substring(0,23).replace("T", " "));
+        notification.setSeen(false);
+        notificationRepository.save(notification);
+
+        return friendRequestReturned;
     }
 
     @Override

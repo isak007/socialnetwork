@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    Notification findBySenderIdAndReceiverIdAndObjectId(Long senderId, Long receiverId, Long objectId);
+    Notification findBySenderIdAndReceiverIdAndObjectIdAndActivityType(Long senderId, Long receiverId, Long objectId, String activityType);
     List<Notification> findAllByReceiverIdAndObjectTypeNot(Long receiverId, String objectType);
 
 }

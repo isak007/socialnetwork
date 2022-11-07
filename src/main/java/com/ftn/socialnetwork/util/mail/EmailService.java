@@ -12,9 +12,7 @@ import static java.lang.String.format;
 public class EmailService implements IEmailService{
 
     private static final String FROM = "virtualconnect6500@outlook.com";
-
     private final JavaMailSender mailSender;
-
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -28,8 +26,7 @@ public class EmailService implements IEmailService{
             mailMessage.setTo(to);
             mailMessage.setSubject(subject);
             mailMessage.setText(text);
-
-            mailSender.send(mailMessage);
+            this.mailSender.send(mailMessage);
         }catch (MailException e){
             throw new InvalidEmailException(format("Email to an address '%s' could not be sent.",to));
         }

@@ -118,16 +118,10 @@ public class RestService {
                 oauth_signature_method+
                 oauth_timestamp+
                 oauth_version;
-        System.out.println(parameter_string);
-
 
         String url_encoded_base_string = "POST&".concat(URLEncoder.encode("https://account.api.here.com/oauth2/token", StandardCharsets.UTF_8)).concat("&").concat(URLEncoder.encode(parameter_string, StandardCharsets.UTF_8));
         String signing_key = "hlZ-ula4cPrLJsH-PmX0_sbphZV67MUiaODV2YuyzRvq8w7PhRyQC1MhEw9jlmlpUoef8mMqvb5AazpkxGzFQQ"; // here.access.key.secret from credentials
         String url_encoded_signing_key =  URLEncoder.encode( signing_key, StandardCharsets.UTF_8).concat("&"); // adding & to the end is required
-
-        System.out.println(url_encoded_signing_key);
-        System.out.println(url_encoded_base_string);
-
 
         Mac sha256_HMAC = null;
         try {
