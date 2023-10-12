@@ -161,31 +161,41 @@ public class PostService implements IPostService {
 
     @Override
     public PostWithData save(String token, PostDTO postDTO) {
-        // validate if user is creating post for himself
         Long userId = jwtTokenUtil.getUserId(token);
-
         User user = userService.findOne(userId);
         if (user == null){
-            throw new EntityNotFoundException(format("User with id '%s' from session doesn't exist.",userId));
+            throw new EntityNotFoundException(
+                    format("User with id '%s' from session doesn't exist.",userId)
+            );
         }
 
         Post post = new Post();
         post.setText(postDTO.getText());
-        post.setDatePosted(LocalDateTime.now().toString().substring(0,16).replace("T"," "));
+        post.setDatePosted(
+                LocalDateTime.now().toString().substring(0,16).replace("T"," ")
+        );
         post.setVisibility(postDTO.getVisibility());
         post.setUser(user);
         post.setEdited(false);
 
-        if(postDTO.getPicture() != null && !postDTO.getPicture().equals("") && postDTO.getPictureBase64() != null) {
+        if(postDTO.getPicture() != null &&
+                !postDTO.getPicture().equals("") &&
+                postDTO.getPictureBase64() != null) {
             post.setPicture(postDTO.getPicture());
-            userService.uploadPicture(post.getUser().getId(), postDTO.getPicture(), postDTO.getPictureBase64(),this.POST_TYPE);
+            userService.uploadPicture(
+                    post.getUser().getId(),
+                    postDTO.getPicture(),
+                    postDTO.getPictureBase64(),
+                    this.POST_TYPE);
         }
 
         Post postReturned = postRepository.save(post);
 
         PostWithData postWithData = new PostWithData();
         postWithData.setPost(postReturned);
-        postWithData.setPostLikes(postLikeService.findAllForPost(token, postReturned.getId(),0).getContent());
+        postWithData.setPostLikes(
+                postLikeService.findAllForPost(token, postReturned.getId(),0).getContent()
+        );
         return postWithData;
     }
 

@@ -31,23 +31,22 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        // Get authorization header and validate
+
         if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Get jwt token and validate
         final String token = header.split(" ")[1].trim();
         if (!jwtTokenUtil.validate(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // if user account is not yet activated and if user is using jwt for account activation
-        // trying to access functionalities
         String username = jwtTokenUtil.getUsername(token);
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isPresent() && !userOptional.get().isActivated()){
@@ -55,7 +54,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Get user identity and set it on the spring security context
         UserDetails userDetails = userRepository
                 .findByUsername(username)
                 .orElse(null);

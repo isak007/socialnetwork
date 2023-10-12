@@ -41,7 +41,6 @@ public class JwtTokenUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .claim("authorities", user.getAuthorities())
                 .claim("userId",user.getId())
-                // userId is optional
                 .signWith(SIGNATURE_ALGORITHM, jwtSecret)
                 .compact();
     }

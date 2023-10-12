@@ -42,6 +42,7 @@ public class UserService implements IUserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final String PROFILE_TYPE = "profile";
     private final String POST_TYPE = "post";
+    private final String PHOTOS_PATH = "src/main/resources/user-photos/";
 
     public UserService(UserRepository userRepository, PostRepository postRepository, JwtTokenUtil jwtTokenUtil, FriendRequestRepository friendRequestRepository,
                        EmailService emailService, AuthenticationManager authenticationManager, BCryptPasswordEncoder bCryptPasswordEncoder) {
@@ -343,17 +344,12 @@ public class UserService implements IUserService {
     public void uploadPicture(Long userId, String pictureName, String pictureBase64, String type){
         var parts = pictureBase64.split(",");
         var imageString = parts[1];
-        // create a buffered image
-        BufferedImage image = null;
         byte[] imageByte;
-
         imageByte = Base64.getDecoder().decode(imageString);
-        ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
 
-        String path = "src/main/resources/user-photos/"+userId+"/"+type;
+        String path = this.PHOTOS_PATH + userId+ "/" +type;
         File directory = new File(path);
         if (! directory.exists()){
-            // If it requires to make the entire directory path including parents,
             directory.mkdirs();
         }
         File outputfile = new File(path+"/"+pictureName);
@@ -362,10 +358,10 @@ public class UserService implements IUserService {
         try {
             os = new FileOutputStream(outputfile);
             os.write(imageByte);
+            os.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     @Override

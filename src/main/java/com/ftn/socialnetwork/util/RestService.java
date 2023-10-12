@@ -46,18 +46,15 @@ public class RestService {
     @Value("${api.key}")
     private String API_KEY;
 
-    public RestService(RestTemplateBuilder restTemplateBuilder) {
+    public RestService(RestTemplateBuilder restTemplateBuilder)
+    {
         this.restTemplate = restTemplateBuilder.build();
     }
 
     public ResponseEntity<Object> getCityList(String cityName) {
         String url = "https://autocomplete.search.hereapi.com/v1/autocomplete";
-
-        // create headers
         HttpHeaders headers = new HttpHeaders();
-        // set `accept` header
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        // set custom header
         headers.set("x-request-source", "desktop");
         headers.set("Authorization", "Bearer " + AUTH_TOKEN_FOR_MAPS_SERVICES);
 
@@ -69,15 +66,14 @@ public class RestService {
                 .queryParam("apiKey", "{apiKey}")
                 .encode()
                 .toUriString();
-
         // create a map for post parameters
         Map<String, String> params = new HashMap<>();
         params.put("q", cityName);
         params.put("types", "city");
         params.put("apiKey", this.API_KEY);
-
         try {
-            return this.restTemplate.exchange(urlTemplate, HttpMethod.GET, entity, Object.class, params);
+            return this.restTemplate.exchange(
+                    urlTemplate, HttpMethod.GET, entity, Object.class, params);
         } catch (HttpClientErrorException | HttpServerErrorException httpClientOrServerExc) {
             if (HttpStatus.UNAUTHORIZED.equals(httpClientOrServerExc.getStatusCode())) {
                 try {
@@ -86,14 +82,14 @@ public class RestService {
 
                     // setting new header and sending request
                     headers.set("Authorization", "Bearer " + newToken);
-                    return this.restTemplate.exchange(urlTemplate, HttpMethod.GET, entity, Object.class, params);
+                    return this.restTemplate.exchange(
+                            urlTemplate, HttpMethod.GET, entity, Object.class, params);
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);
                 }
             }
             return null;
         }
-
     }
 
     public String renewValidationTokenWebClient() throws URISyntaxException {
